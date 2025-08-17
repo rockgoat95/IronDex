@@ -63,3 +63,6 @@ CLAUDE.md
 .cursor/
 .windsurf/
 .clinerules/
+
+# env 파일 
+.env*
