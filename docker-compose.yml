@@ -1,15 +1,14 @@
 version: '3.8'
 services:
   supabase:
-    image: supabase/supabase:latest
+    image: supabase/postgres:latest
     container_name: supabase
     environment:
-      SUPABASE_DB_PASSWORD: yourpassword
-      SUPABASE_DB_USER: youruser
-      SUPABASE_DB_NAME: yourdb
+      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_USER: youruser
+      POSTGRES_DB: yourdb
     ports:
       - "5432:5432"   # Postgres
-      - "8000:8000"   # Supabase API/Studio
     volumes:
       - ./supabase:/docker-entrypoint-initdb.d
 

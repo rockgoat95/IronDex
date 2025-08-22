@@ -69,8 +69,8 @@ class _HomeState extends State<Home> {
                         return Column(
                           children: [
                             Container(
-                              width: 60,
-                              height: 60,
+                              width: 70,
+                              height: 70,
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 border: Border.all(color: Colors.grey, width: 1), // 보더 추가
