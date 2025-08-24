@@ -18,16 +18,22 @@ class BrandItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 clipBehavior: Clip.hardEdge,
-                child: Image.asset(
+                child: Image.network(
                   image!,
                   fit: BoxFit.contain,
                 ),
               )
             : Icon(Icons.business),
         const SizedBox(height: 4),
-        Text(
-          name,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+        SizedBox(
+          width: 60,
+          child: Text(
+            name,
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
         ),
       ],
     );

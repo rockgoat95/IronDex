@@ -7,3 +7,24 @@ Future<List<Map<String, dynamic>>> fetchBrands() async {
 
   return response; // 이미 List<Map<String, dynamic>>
 }
+
+
+Future<List<Map<String, dynamic>>> fetchMachines() async {
+  final response = await Supabase.instance.client
+      .from('machines')
+      .select('''
+      name,
+      status,
+      image_url,
+      review_cnt,
+      body_parts,
+      movements,
+      type,
+      brand:brands (
+        name,
+        logo_url
+      )
+    ''')
+    .eq('status', 'approved'); // 승인된 머신만
+  return response; // 이미 List<Map<String, dynamic>>
+}

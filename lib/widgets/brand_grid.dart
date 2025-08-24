@@ -16,7 +16,7 @@ class BrandGrid extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 5,
-            childAspectRatio: 0.9,
+            childAspectRatio: 0.75,
           ),
           itemCount: brands.length > 5 ? 5 : brands.length,
           itemBuilder: (context, index) {

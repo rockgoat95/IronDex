@@ -32,7 +32,7 @@ class MachineDex extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
       ),
-      home: const Home(title: 'MachineDex'), 
+      home: const Home(title: 'IronDex'), 
     );
   }
 }
