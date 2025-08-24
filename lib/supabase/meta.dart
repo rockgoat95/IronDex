@@ -17,6 +17,7 @@ Future<List<Map<String, dynamic>>> fetchMachines() async {
       status,
       image_url,
       review_cnt,
+      score,
       body_parts,
       movements,
       type,
@@ -26,5 +27,8 @@ Future<List<Map<String, dynamic>>> fetchMachines() async {
       )
     ''')
     .eq('status', 'approved'); // 승인된 머신만
+  for (final m in response) {
+    print('fetchMachines: name=${m['name']}, score=${m['score']}');
+  }
   return response; // 이미 List<Map<String, dynamic>>
 }
