@@ -20,39 +20,38 @@ class MachineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  print('MachineCard: name=$name, score=$score, reviewCnt=$reviewCnt');
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Image.network(
-                imageUrl,
-                height: 50,
-                width: double.infinity,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 50,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.broken_image, size: 40),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 160,
+          height: 160,
+          margin: const EdgeInsets.symmetric(horizontal: 1),
+          child: Card(
+            color: Colors.white,
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              children: [
+                Center(
+                  child: SizedBox(
+                    width: 120,
+                    height: 90,
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.broken_image, size: 40),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 1),
-            SizedBox(
-              width: 120,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ClipRRect(
+                Positioned(
+                  left: 8,
+                  top: 8,
+                  child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
                       brandLogoUrl,
@@ -67,46 +66,65 @@ class MachineCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 4),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SizedBox(
+              width: 100,
+              child:Text(
+                brandName,
+                maxLines: 1,
+                textAlign: TextAlign.left,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+              ),
+            ),
+            SizedBox(
+              width: 50,
+              child:Row(
+                children: [
+                  const Icon(Icons.star, color: Colors.amber, size: 14),
+                  SizedBox(width: 2),
                   Text(
-                    brandName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    score != null ? score!.toStringAsFixed(1) : '-',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
-                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(width: 2),
+                  Text(
+                    '(${reviewCnt ?? 0})',
+                    style: const TextStyle(fontSize: 9, color: Colors.grey),
                   ),
                 ],
               ),
             ),
-            SizedBox(
-              width: 120,
-              child: Text(
-                name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w500),
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.star, color: Colors.amber, size: 18),
-                const SizedBox(width: 4),
-                Text(
-                  score != null ? score!.toStringAsFixed(1) : '-',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '(${reviewCnt ?? 0})',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
           ],
         ),
-      ),
+        Row(
+          children: [
+            SizedBox(width: 10),
+            SizedBox(
+              width: 160,
+              child: Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.left,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromARGB(255, 50, 50, 50),
+                ),
+              ),
+            ),
+          ]
+        ),
+      ],
     );
   }
 }
