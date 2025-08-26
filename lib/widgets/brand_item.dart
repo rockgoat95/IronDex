@@ -13,17 +13,27 @@ class BrandItem extends StatelessWidget {
             ? Container(
                 width: 60,
                 height: 60,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade700, width: 2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                clipBehavior: Clip.hardEdge,
-                child: Image.network(
-                  image!,
-                  fit: BoxFit.contain,
+                child: Card(
+                  color: Colors.white,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  clipBehavior: Clip.antiAlias,
+                  child: Image.network(
+                    image!,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               )
-            : Icon(Icons.business),
+            : Card(
+                color: Colors.white,
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  child: const Icon(Icons.business),
+                ),
+              ),
         const SizedBox(height: 4),
         SizedBox(
           width: 60,
