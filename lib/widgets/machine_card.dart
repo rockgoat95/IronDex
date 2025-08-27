@@ -7,6 +7,7 @@ class MachineCard extends StatelessWidget {
   final String brandLogoUrl;
   final double? score;
   final int? reviewCnt;
+  final bool isSelected;
 
   const MachineCard({
     super.key,
@@ -16,6 +17,7 @@ class MachineCard extends StatelessWidget {
     required this.brandLogoUrl,
     this.score,
     this.reviewCnt,
+    this.isSelected = false,
   });
 
   @override
@@ -27,9 +29,22 @@ class MachineCard extends StatelessWidget {
           width: 160,
           height: 160,
           margin: const EdgeInsets.symmetric(horizontal: 1),
+          decoration: isSelected 
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.3),
+                    spreadRadius: 2,
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              )
+            : null,
           child: Card(
             color: Colors.white,
-            elevation: 2,
+            elevation: isSelected ? 4 : 2,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             clipBehavior: Clip.antiAlias,
             child: Stack(

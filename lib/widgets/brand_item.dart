@@ -3,7 +3,14 @@ import 'package:flutter/material.dart';
 class BrandItem extends StatelessWidget {
   final String name;
   final String? image;
-  const BrandItem({super.key, required this.name, this.image});
+  final bool isSelected;
+  
+  const BrandItem({
+    super.key, 
+    required this.name, 
+    this.image,
+    this.isSelected = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,6 +20,19 @@ class BrandItem extends StatelessWidget {
             ? Container(
                 width: 60,
                 height: 60,
+                decoration: isSelected 
+                  ? BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.3),
+                          spreadRadius: 1,
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    )
+                  : null,
                 child: Card(
                   color: Colors.white,
                   elevation: 2,
@@ -24,13 +44,26 @@ class BrandItem extends StatelessWidget {
                   ),
                 ),
               )
-            : Card(
-                color: Colors.white,
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: Container(
-                  width: 60,
-                  height: 60,
+            : Container(
+                width: 60,
+                height: 60,
+                decoration: isSelected 
+                  ? BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.3),
+                          spreadRadius: 1,
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    )
+                  : null,
+                child: Card(
+                  color: Colors.white,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: const Icon(Icons.business),
                 ),
               ),

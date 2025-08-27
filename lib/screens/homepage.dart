@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../widgets/brand_list.dart';
 import '../widgets/review_list.dart';
 import '../widgets/machine_list.dart';
-import '../widgets/filter_chips.dart';
+import '../widgets/body_part_chips.dart';
+import '../widgets/detail_filter_modal.dart';
+import '../constants/filter_constants.dart';
 
 class Home extends StatefulWidget {
   final String title;
@@ -14,17 +16,78 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   // 필터 상태
+  String? selectedBrandId;
   List<String>? selectedBodyParts;
   List<String>? selectedMovements;
   String? selectedMachineType;
+  String? selectedMachineId; // 특정 머신 선택
 
-  // 필터 변경 콜백
-  void _onFilterChanged(List<String>? bodyParts, List<String>? movements, String? machineType) {
+  // 브랜드 필터 변경
+  void _onBrandSelected(String? brandId) {
+    setState(() {
+      selectedBrandId = brandId;
+      selectedMachineId = null; // 브랜드 변경시 머신 선택 해제
+    });
+  }
+
+  // 머신 선택 변경
+  void _onMachineSelected(String? machineId) {
+    setState(() {
+      selectedMachineId = machineId;
+    });
+  }
+
+  // 부위 필터 변경
+  void _onBodyPartsChanged(List<String>? bodyParts) {
     setState(() {
       selectedBodyParts = bodyParts;
+      
+      // 부위 변경시 관련없는 움직임 제거
+      if (selectedMovements != null && bodyParts != null) {
+        // 선택된 부위들에 대한 가능한 움직임들 계산
+        Set<String> availableMovements = {};
+        for (String bodyPart in bodyParts) {
+          availableMovements.addAll(FilterConstants.bodyPartMovements[bodyPart] ?? []);
+        }
+        
+        // 기존 선택된 움직임 중 관련없는 것들 제거
+        selectedMovements = selectedMovements!
+            .where((movement) => availableMovements.contains(movement))
+            .toList();
+        
+        if (selectedMovements!.isEmpty) {
+          selectedMovements = null;
+        }
+      } else if (bodyParts == null) {
+        // 부위가 모두 해제되면 움직임도 초기화
+        selectedMovements = null;
+      }
+    });
+  }
+
+  // 세부 필터 변경
+  void _onDetailFilterChanged(List<String>? movements, String? machineType) {
+    setState(() {
       selectedMovements = movements;
       selectedMachineType = machineType;
     });
+  }
+
+  // 세부 필터 모달 표시
+  void _showDetailFilterModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DetailFilterModal(
+        selectedBodyParts: selectedBodyParts,
+        selectedMovements: selectedMovements,
+        selectedMachineType: selectedMachineType,
+        onDetailFilterChanged: _onDetailFilterChanged,
+      ),
+    );
   }
   @override
   Widget build(BuildContext context) {
@@ -32,28 +95,99 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Container(
-        color: Colors.white,
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-            const BrandGrid(),
-            const SizedBox(height: 12),
-            FilterChips(
-              selectedBodyParts: selectedBodyParts,
-              selectedMovements: selectedMovements,
-              selectedMachineType: selectedMachineType,
-              onFilterChanged: _onFilterChanged,
+      body: Stack(
+        children: [
+          Container(
+            color: Colors.white,
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                BrandGrid(
+                  selectedBrandId: selectedBrandId,
+                  onBrandSelected: _onBrandSelected,
+                ),
+                BodyPartChips(
+                  selectedBodyParts: selectedBodyParts,
+                  onBodyPartsChanged: _onBodyPartsChanged,
+                ),
+                const SizedBox(height: 10),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Machine',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                MachineList(
+                  brandId: selectedBrandId,
+                  bodyParts: selectedBodyParts,
+                  movements: selectedMovements,
+                  machineType: selectedMachineType,
+                  selectedMachineId: selectedMachineId,
+                  onMachineSelected: _onMachineSelected,
+                ),
+                const SizedBox(height: 24),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Review',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ReviewList(
+                    brandId: selectedBrandId,
+                    bodyParts: selectedBodyParts,
+                    movements: selectedMovements,
+                    machineType: selectedMachineType,
+                    selectedMachineId: selectedMachineId,
+                  ),
+                ),
+              ],
             ),
-            MachineList(
-              bodyParts: selectedBodyParts,
-              movements: selectedMovements,
-              machineType: selectedMachineType,
+          ),
+          // 좌측 하단 필터 버튼
+          Positioned(
+            bottom: 16,
+            left: 16,
+            child: FloatingActionButton.small(
+              onPressed: _showDetailFilterModal,
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.grey.shade600,
+              child: const Icon(Icons.tune),
             ),
-            const SizedBox(height: 24),
-            const Expanded(child: ReviewList()),
-          ],
-        ),
+          ),
+          // 우측 하단 플레이스홀더 버튼
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton.small(
+              onPressed: () {
+                // TODO: 기능 구현 예정
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('기능 구현 예정')),
+                );
+              },
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.grey.shade600,
+              child: const Icon(Icons.add),
+            ),
+          ),
+        ],
       ),
     );
   }

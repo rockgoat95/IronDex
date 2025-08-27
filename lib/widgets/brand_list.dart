@@ -3,7 +3,14 @@ import 'brand_item.dart';
 import '../supabase/meta.dart';
 
 class BrandGrid extends StatefulWidget {
-  const BrandGrid({super.key});
+  final String? selectedBrandId;
+  final Function(String?) onBrandSelected;
+  
+  const BrandGrid({
+    super.key,
+    this.selectedBrandId,
+    required this.onBrandSelected,
+  });
 
   @override
   State<BrandGrid> createState() => _BrandGridState();
@@ -44,9 +51,19 @@ class _BrandGridState extends State<BrandGrid> {
               itemCount: brands.length > 5 ? 5 : brands.length,
               itemBuilder: (context, index) {
                 final brand = brands[index];
-                return BrandItem(
-                  name: brand['name'] ?? '',
-                  image: brand['logo_url'],
+                final brandId = brand['id']?.toString();
+                final isSelected = widget.selectedBrandId == brandId;
+                
+                return GestureDetector(
+                  onTap: () {
+                    // 같은 브랜드 클릭시 선택 해제, 다른 브랜드 클릭시 선택
+                    widget.onBrandSelected(isSelected ? null : brandId);
+                  },
+                  child: BrandItem(
+                    name: brand['name'] ?? '',
+                    image: brand['logo_url'],
+                    isSelected: isSelected,
+                  ),
                 );
               },
             ),
