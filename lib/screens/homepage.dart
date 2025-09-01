@@ -5,7 +5,7 @@ import '../widgets/homepage/machine_list.dart';
 import '../widgets/homepage/body_part_chips.dart';
 import '../widgets/homepage/detail_filter_modal.dart';
 import '../constants/filter_constants.dart';
-import 'review_create_screen.dart';
+import 'writing_review.dart';
 
 class Home extends StatefulWidget {
   final String title;

@@ -82,16 +82,6 @@ class RatingWidget extends StatelessWidget {
             );
           }),
         ),
-        const SizedBox(height: 8),
-        
-        // 현재 평점 표시
-        Text(
-          '평점: ${rating.toStringAsFixed(1)}/5.0',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade600,
-          ),
-        ),
       ],
     );
   }

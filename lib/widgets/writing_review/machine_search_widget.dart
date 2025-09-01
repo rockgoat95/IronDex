@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../supabase/fetcher.dart';
 import '../../supabase/search.dart';
 
 class MachineSearchWidget extends StatefulWidget {
