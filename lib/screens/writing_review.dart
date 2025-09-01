@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../widgets/writing_review/machine_search_widget.dart';
+import '../widgets/writing_review/rating_widget.dart';
+import '../widgets/writing_review/photo_upload_widget.dart';
 
 class ReviewCreateScreen extends StatefulWidget {
   const ReviewCreateScreen({super.key});
@@ -15,6 +18,7 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
   final _contentController = TextEditingController();
   
   String? _selectedMachineId;
+  String? _selectedMachineName;
   double _rating = 5.0;
   bool _isSubmitting = false;
   List<File> _selectedImages = [];
@@ -25,6 +29,21 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
     _titleController.dispose();
     _contentController.dispose();
     super.dispose();
+  }
+
+  // 머신 선택 콜백
+  void _onMachineSelected(String machineId, String machineName) {
+    setState(() {
+      _selectedMachineId = machineId;
+      _selectedMachineName = machineName;
+    });
+  }
+
+  // 평점 변경 콜백
+  void _onRatingChanged(double rating) {
+    setState(() {
+      _rating = rating;
+    });
   }
 
   // 이미지 선택 함수
@@ -46,6 +65,17 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
 
   void _submitReview() {
     if (_formKey.currentState!.validate()) {
+      // 머신이 선택되었는지 확인
+      if (_selectedMachineId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('머신을 선택해주세요'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       setState(() {
         _isSubmitting = true;
       });
@@ -84,121 +114,20 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Machine Selection
-              const Text(
-                'Select Machine',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: GestureDetector(
-                  onTap: () {
-                    // TODO: Machine selection modal
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Machine selection feature coming soon')),
-                    );
-                  },
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _selectedMachineId == null 
-                            ? 'Please select a machine' 
-                            : 'Selected machine: $_selectedMachineId',
-                          style: TextStyle(
-                            color: _selectedMachineId == null 
-                              ? Colors.grey.shade600 
-                              : Colors.black,
-                          ),
-                        ),
-                      ),
-                      Icon(
-                        Icons.arrow_drop_down,
-                        color: Colors.grey.shade600,
-                      ),
-                    ],
-                  ),
-                ),
+              // Machine Selection Widget
+              MachineSearchWidget(
+                selectedMachineName: _selectedMachineName,
+                onMachineSelected: _onMachineSelected,
               ),
               
               const SizedBox(height: 24),
               
-              // Rating (Stars)
-              const Text(
-                'Rating',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              // Rating Widget
+              RatingWidget(
+                rating: _rating,
+                onRatingChanged: _onRatingChanged,
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: List.generate(5, (starIndex) {
-                  return GestureDetector(
-                    onTapDown: (TapDownDetails details) {
-                      // Determine if tap position is left or right half of the star
-                      final double tapX = details.localPosition.dx;
-                      
-                      setState(() {
-                        if (tapX < 16) {
-                          // Left half - 0.5 points
-                          _rating = starIndex.toDouble() + 0.5;
-                        } else {
-                          // Right half - 1.0 points
-                          _rating = starIndex.toDouble() + 1.0;
-                        }
-                      });
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      width: 32,
-                      height: 32,
-                      child: Stack(
-                        children: [
-                          // Base gray star
-                          const Icon(
-                            Icons.star,
-                            size: 32,
-                            color: Colors.grey,
-                          ),
-                          // Filled portion
-                          if (_rating > starIndex.toDouble()) ...[
-                            if (_rating >= starIndex.toDouble() + 1.0) 
-                              // Fully filled star
-                              const Icon(
-                                Icons.star,
-                                size: 32,
-                                color: Colors.amber,
-                              )
-                            else
-                              // Half filled star (left side only)
-                              ClipRect(
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  widthFactor: 0.5,
-                                  child: const Icon(
-                                    Icons.star,
-                                    size: 32,
-                                    color: Colors.amber,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-              ),
+              
               const SizedBox(height: 24),
               
               // Title
@@ -260,128 +189,11 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
               
               const SizedBox(height: 24),
               
-              // Photo Upload
-              const Text(
-                'Photo Upload',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    if (_selectedImages.isEmpty) ...[
-                      GestureDetector(
-                        onTap: _pickImages,
-                        child: Container(
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Colors.grey.shade300,
-                              style: BorderStyle.solid,
-                            ),
-                          ),
-                          child: const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.camera_alt,
-                                  size: 32,
-                                  color: Colors.grey,
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Please select photos',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ] else ...[
-                      // 선택된 이미지들 표시
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                        ),
-                        itemCount: _selectedImages.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == _selectedImages.length) {
-                            // Add button
-                            return GestureDetector(
-                              onTap: _pickImages,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey.shade300),
-                                ),
-                                child: const Icon(
-                                  Icons.add,
-                                  size: 32,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            );
-                          }
-                          
-                          // Image display
-                          return Stack(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  image: DecorationImage(
-                                    image: FileImage(_selectedImages[index]),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 4,
-                                right: 4,
-                                child: GestureDetector(
-                                  onTap: () => _removeImage(index),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(2),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.close,
-                                      size: 16,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ],
-                ),
+              // Photo Upload Widget
+              PhotoUploadWidget(
+                selectedImages: _selectedImages,
+                onPickImages: _pickImages,
+                onRemoveImage: _removeImage,
               ),
               
               const SizedBox(height: 32),
