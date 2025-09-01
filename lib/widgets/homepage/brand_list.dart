@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'brand_item.dart';
-import '../supabase/meta.dart';
+import '../../supabase/fetcher.dart';
 
 class BrandGrid extends StatefulWidget {
   final String? selectedBrandId;

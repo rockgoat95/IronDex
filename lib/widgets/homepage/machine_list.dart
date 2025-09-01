@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../supabase/meta.dart';
+import '../../supabase/fetcher.dart';
 import 'machine_card.dart';
 
 class MachineList extends StatefulWidget {
@@ -70,6 +70,16 @@ class _MachineListState extends State<MachineList> {
     if (loading) {
       return const Center(child: CircularProgressIndicator());
     }
+
+    if (machines.isEmpty) {
+      return const Center(
+        child: Text(
+          'Machines are not found.',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
+    }
+
     return SizedBox(
       height: 200,
       child: ListView.builder(

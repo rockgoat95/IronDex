@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../supabase/meta.dart';
+import '../../supabase/fetcher.dart';
 import 'review_card.dart';
 
 class ReviewList extends StatefulWidget {

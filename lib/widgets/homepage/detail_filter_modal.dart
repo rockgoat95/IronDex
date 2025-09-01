@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../constants/filter_constants.dart';
+import '../../constants/filter_constants.dart';
 
 class DetailFilterModal extends StatefulWidget {
   final List<String>? selectedBodyParts;

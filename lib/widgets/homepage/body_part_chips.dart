@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../constants/filter_constants.dart';
+import '../../constants/filter_constants.dart';
 
 class BodyPartChips extends StatelessWidget {
   final List<String>? selectedBodyParts;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../constants/filter_constants.dart';
+import '../../constants/filter_constants.dart';
 
 class MachineFilter extends StatefulWidget {
   final Function(List<String>?, List<String>?, String?) onFilterChanged;

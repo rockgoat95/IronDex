@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import '../widgets/brand_list.dart';
-import '../widgets/review_list.dart';
-import '../widgets/machine_list.dart';
-import '../widgets/body_part_chips.dart';
-import '../widgets/detail_filter_modal.dart';
+import '../widgets/homepage/brand_list.dart';
+import '../widgets/homepage/review_list.dart';
+import '../widgets/homepage/machine_list.dart';
+import '../widgets/homepage/body_part_chips.dart';
+import '../widgets/homepage/detail_filter_modal.dart';
 import '../constants/filter_constants.dart';
+import 'review_create_screen.dart';
 
 class Home extends StatefulWidget {
   final String title;
@@ -165,26 +166,33 @@ class _HomeState extends State<Home> {
             bottom: 16,
             left: 16,
             child: FloatingActionButton.small(
+              heroTag: "filter_button",
               onPressed: _showDetailFilterModal,
               backgroundColor: Colors.white,
               foregroundColor: Colors.grey.shade600,
               child: const Icon(Icons.tune),
             ),
           ),
-          // 우측 하단 플레이스홀더 버튼
+          // 우측 하단 리뷰 작성 버튼
           Positioned(
             bottom: 16,
             right: 16,
-            child: FloatingActionButton.small(
-              onPressed: () {
-                // TODO: 기능 구현 예정
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('기능 구현 예정')),
-                );
-              },
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.grey.shade600,
-              child: const Icon(Icons.add),
+            child: Tooltip(
+              message: "리뷰 작성",
+              child: FloatingActionButton.small(
+                heroTag: "review_button",
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ReviewCreateScreen(),
+                    ),
+                  );
+                },
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.grey.shade600,
+                child: const Icon(Icons.add),
+              ),
             ),
           ),
         ],
