@@ -71,3 +71,5 @@ CLAUDE.md
 
 # env 파일 
 .env*
+
+.metadata
