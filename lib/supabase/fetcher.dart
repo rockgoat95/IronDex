@@ -83,8 +83,6 @@ Future<List<Map<String, dynamic>>> fetchMachineReviews({
   List<String>? movements,
   String? type,
 }) async {
-  print('fetchMachineReviews called with: brandId=$brandId, machineId=$machineId, bodyParts=$bodyParts, movements=$movements, type=$type');
-  
   var query = Supabase.instance.client
       .from('machine_reviews')
       .select('''
@@ -144,6 +142,5 @@ Future<List<Map<String, dynamic>>> fetchMachineReviews({
       .order('like_count', ascending: false) // 리뷰 like_count 순으로 정렬
       .range(offset, offset + limit - 1);
   
-  print('fetchMachineReviews result count: ${response.length}');
   return response;
 }
