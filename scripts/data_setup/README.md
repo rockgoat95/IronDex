@@ -1,2 +1,1 @@
-# IronIndex-HighFunctionalAPI
-IronIndex 를 위한 고급기능 API 서버
+그냥 초기 데이터 스크래핑 스크립트임
