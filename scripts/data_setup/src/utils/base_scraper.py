@@ -62,7 +62,7 @@ class BaseScraper:
         chrome_options = Options()
 
         # Bot 감지 우회를 위한 설정들
-        chrome_options.add_argument("--headless=new")
+        # chrome_options.add_argument("--headless=new")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
@@ -92,9 +92,9 @@ class BaseScraper:
         if hasattr(self, "driver") and self.driver:
             self.driver.quit()
 
-    def fetch_page(self, url: str) -> BeautifulSoup:
+    def fetch_page(self, url: str, use_selenium: bool = False) -> BeautifulSoup:
         """웹페이지를 가져오고 BeautifulSoup 객체로 반환"""
-        if self.use_selenium:
+        if use_selenium:
             return self.fetch_page_with_selenium(url)
         else:
             return self.fetch_page_with_requests(url)
@@ -148,7 +148,7 @@ class BaseScraper:
         items = []
         for url in target_urls:
             self.current_base_url = self._get_base_url(url)  # 베이스 URL 저장
-            soup = self.fetch_page(url)
+            soup = self.fetch_page(url, use_selenium=self.use_selenium)
 
             # 상품 아이템 추출
             items.extend(self.extract_items(soup))
