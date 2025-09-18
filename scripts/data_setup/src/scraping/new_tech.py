@@ -2,7 +2,6 @@ import logging
 from typing import Any
 
 from bs4 import Tag
-
 from utils.base_scraper import BaseScraper
 from utils.model import ScraperConfig
 
