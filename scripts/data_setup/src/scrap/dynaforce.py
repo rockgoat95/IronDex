@@ -15,9 +15,9 @@ DynaforceScraperConfig = ScraperConfig(
 
 
 class DynaforceScraper(BaseScraper):
-    def __init__(self, machine_series: str):
+    def __init__(self):
         super().__init__(DynaforceScraperConfig, contain_series=False)
-        self.machine_series = machine_series
+        self.machine_series = ""
 
     def extract_name(self, item: Tag) -> str:
 
@@ -28,7 +28,7 @@ class DynaforceScraper(BaseScraper):
 
 
 if __name__ == "__main__":
-    scraper = DynaforceScraper("Line")
+    scraper = DynaforceScraper()
     urls = ["http://www.dynaforce.co.kr/bbs/board.php?bo_table=weight"]
     items = scraper.scrap(urls)
     for item in items:
