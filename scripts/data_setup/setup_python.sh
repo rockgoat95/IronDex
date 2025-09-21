@@ -44,10 +44,16 @@ fi
 
 # 4. direnv 설정 (설치되어 있는 경우)
 if command -v direnv &> /dev/null; then
-    echo "🔄 direnv 설정 중..."
-    # direnv는 .envrc 파일이 있는 디렉토리에서 실행해야 합니다.
-    # .envrc가 루트에 있다고 가정합니다.
+    echo "🔄 direnv 설정 중..."    
     cd "$PROJECT_ROOT"
+
+    # .envrc 파일이 없으면 생성합니다.
+    ENVRC_PATH="$PROJECT_ROOT/.envrc"
+    if [ ! -f "$ENVRC_PATH" ]; then
+        echo "source .venv/bin/activate" > "$ENVRC_PATH"
+        echo "✅ .envrc 파일 생성 완료"
+    fi
+
     direnv allow
     echo "✅ direnv 설정 완료"
 else
