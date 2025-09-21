@@ -16,9 +16,10 @@ NewTechScraperConfig = ScraperConfig(
 
 
 class NewTechScraper(BaseScraper):
-    def __init__(self, machine_series):
+    def __init__(self, machine_series, type_: str = "Selectorized"):
         super().__init__(NewTechScraperConfig)
         self.machine_series = machine_series
+        self.type_ = type_
 
     def extract_additional_info(self, item: Tag) -> Any:
         """상세 페이지에서 추가 정보 추출"""
@@ -68,6 +69,9 @@ class NewTechScraper(BaseScraper):
         except Exception as e:
             logger.error(f"상세 정보 추출 중 오류: {e}")
             return None
+
+    def extract_additional_info(self, item: Tag) -> dict[str, str]:
+        return {"type": self.type_}
 
 
 if __name__ == "__main__":

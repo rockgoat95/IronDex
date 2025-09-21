@@ -14,9 +14,14 @@ LexcoScraperConfig = ScraperConfig(
 
 
 class LexcoScraper(BaseScraper):
-    def __init__(self, machine_series: str):
+    def __init__(self, machine_series: str, type_: str = "Selectorized"):
         super().__init__(LexcoScraperConfig)
         self.machine_series = machine_series
+        self.type_ = type_
+
+    def extract_additional_info(self, item: Tag):
+        return {"type": self.type_}
+
 
 
 if __name__ == "__main__":

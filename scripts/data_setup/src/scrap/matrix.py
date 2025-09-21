@@ -20,9 +20,10 @@ MatrixScraperConfig = ScraperConfig(
 
 
 class MatrixScraper(BaseScraper):
-    def __init__(self, machine_series: str):
+    def __init__(self, type_: str = "Selectorized"):
         super().__init__(MatrixScraperConfig, contain_series=False, use_selenium=True)
-        self.machine_series = machine_series
+        self.machine_series = ""
+        self.type_ = type_
 
     def extract_name(self, item: Tag) -> str:
         name_elem = item.select_one(self.name_selector)
@@ -61,10 +62,12 @@ class MatrixScraper(BaseScraper):
 
         except (TimeoutException, NoSuchElementException):
             logger.info("더 이상 Load More 버튼이 없습니다")
+    def extract_additional_info(self, item: Tag) -> dict[str, str]:
+        return {"type": self.type_}
 
 
 if __name__ == "__main__":
-    scraper = MatrixScraper("Line")
+    scraper = MatrixScraper()
     urls = [
         "https://kr.matrixfitness.com/kor/strength/catalog"
         "?modalities=plate-loaded&modalities=single-station"

@@ -16,9 +16,13 @@ HoistScraperConfig = ScraperConfig(
 
 
 class HoistScraper(BaseScraper):
-    def __init__(self, machine_series: str):
-        super().__init__(HoistScraperConfig)
-        self.machine_series = machine_series
+    def __init__(self, type_: str):
+        super().__init__(
+            HoistScraperConfig,
+            contain_series=False
+        )
+        self.machine_series = ""
+        self.type_ = type_
 
     def extract_name(self, item):
         name_elem = item.select_one(self.name_selector)
@@ -31,7 +35,12 @@ class HoistScraper(BaseScraper):
 
         # ' - ' 이후의 부분 제거
         name = name.split(" - ")[0].strip()
-        return name
+
+
+        code_elem = item.select("h6")[1]
+        code = code_elem.get_text(strip=True).replace('"', "").strip()
+
+        return name + " " + code
 
     def extract_image_url(self, item):
         img_elem = item.select_one(self.image_selector)
@@ -44,13 +53,11 @@ class HoistScraper(BaseScraper):
         return "https:" + img_url
 
     def extract_additional_info(self, item: Tag):
-        code_elem = item.select("h6")[1]
-        code = code_elem.get_text(strip=True).replace('"', "").strip()
-        return {"code": code}
+        return {"type": self.type_}
 
 
 if __name__ == "__main__":
-    scraper = HoistScraper("Plate Loaded")
+    scraper = HoistScraper()
     urls = ["https://www.hoistfitness.com/collections/ccat-plate-loaded"]
     items = scraper.scrap(urls)
     for item in items:

@@ -17,12 +17,12 @@ LifeFitnessScraperConfig = ScraperConfig(
 
 
 class LifeFitnessScraper(BaseScraper):
-    def __init__(self, machine_series: str, contain_series: bool = False):
+    def __init__(self):
         super().__init__(
             LifeFitnessScraperConfig,
-            contain_series=contain_series
+            contain_series=False
         )
-        self.machine_series = machine_series
+        self.machine_series = ""
 
     def extract_image_url(self, item: Tag) -> str:
         """div 태그의 background-image 스타일에서 이미지 URL 추출"""
@@ -43,7 +43,7 @@ class LifeFitnessScraper(BaseScraper):
 
 
 if __name__ == "__main__":
-    scraper = LifeFitnessScraper("All", False)
+    scraper = LifeFitnessScraper()
     urls = [
         "https://www.lifefitness.com/en-us/catalog?Brand=1056&Type=1079"
         f"&pageNumber={i}#searchform"

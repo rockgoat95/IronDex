@@ -17,12 +17,12 @@ HammerStrengthScraperConfig = ScraperConfig(
 
 
 class HammerStrengthScraper(BaseScraper):
-    def __init__(self, machine_series: str, contain_series: bool = False):
+    def __init__(self):
         super().__init__(
             HammerStrengthScraperConfig,
-            contain_series=contain_series
+            contain_series=False
         )
-        self.machine_series = machine_series
+        self.machine_series = ""
 
     def extract_image_url(self, item: Tag) -> str:
         """div 태그의 background-image 스타일에서 이미지 URL 추출"""
@@ -43,7 +43,7 @@ class HammerStrengthScraper(BaseScraper):
 
 
 if __name__ == "__main__":
-    scraper = HammerStrengthScraper("All", False)
+    scraper = HammerStrengthScraper()
     urls = [
         "https://www.lifefitness.com/en-us/catalog?Brand=1053&Type=1079"
         f"&pageNumber={i}#searchform"

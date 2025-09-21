@@ -16,9 +16,9 @@ GymlecoScraperConfig = ScraperConfig(
 
 
 class GymlecoScraper(BaseScraper):
-    def __init__(self, machine_series: str, type_: str = "Selectorized"):
-        super().__init__(GymlecoScraperConfig)
-        self.machine_series = machine_series
+    def __init__(self, type_: str = "Selectorized"):
+        super().__init__(GymlecoScraperConfig, contain_series=False)
+        self.machine_series = ""
         self.type_ = type_
 
     def extract_additional_info(self, item: Tag) -> dict[str, str]:
@@ -26,7 +26,7 @@ class GymlecoScraper(BaseScraper):
 
 
 if __name__ == "__main__":
-    scraper = GymlecoScraper("Plate Loaded", type_="Plate-loaded")
+    scraper = GymlecoScraper(type_="Plate-loaded")
     urls = ["https://gymleco.com/collections/plate-loaded-machines"]
     items = scraper.scrap(urls)
     for item in items:

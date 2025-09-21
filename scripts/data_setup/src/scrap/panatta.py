@@ -18,10 +18,29 @@ PanattaScraperConfig = ScraperConfig(
 
 
 class PanattaScraper(BaseScraper):
-    def __init__(self, machine_series):
+    def __init__(self, machine_series, type_: str = "Selectorized"):
         super().__init__(PanattaScraperConfig)
         self.machine_series = machine_series
+        self.type_ = type_
 
+    def extract_name(self, item) -> str:
+        name_elem = item.select_one(self.name_selector)
+        if name_elem is None:
+            raise ValueError(
+                f"Name element not found with selector: {self.name_selector}"
+            )
+
+        name = name_elem.get_text(strip=True)
+
+        code_elem = item.select_one("span.woocommerce-loop-product__sku")
+        if code_elem is None:
+            raise ValueError(f"Code element not found with selector")
+        code = code_elem.get_text(strip=True)
+
+        return name + " " + code
+
+    def extract_additional_info(self, item) -> dict[str, str]:
+        return {"type": self.type_}
 
 if __name__ == "__main__":
     scraper = PanattaScraper("Monolith")
