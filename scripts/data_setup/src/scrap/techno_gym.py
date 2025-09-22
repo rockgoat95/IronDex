@@ -62,7 +62,6 @@ if __name__ == "__main__":
     # items = scraper.scrap(urls)
 
     scraper = TechnoGymScraper("Plate-loaded")
-    base_url = "https://www.technogym.com/en-INT/category"
-    category = "plate-loaded"
-    urls = [f"{base_url}/{category}/"]
+    base_url = "https://www.technogym.com/en-INT/category/plate-loaded"
+    urls = [f"{base_url}/"]
     items = scraper.scrap(urls)

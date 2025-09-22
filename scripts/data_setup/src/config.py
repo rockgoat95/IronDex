@@ -181,7 +181,7 @@ SCRAP_CONFIG = [
     {
         "scraper": HoistScraper("Selectorized"),
         "urls": [
-            "https://www.hoistfitness.com/collections/ccat-hd-dual-series"
+            "https://www.hoistfitness.com/collections/ccat-hd-dual-series",
             "https://www.hoistfitness.com/collections/ccat-selectorized",
             "https://www.hoistfitness.com/collections/ccat-multi-jungle-systems",
         ]
@@ -239,14 +239,14 @@ SCRAP_CONFIG = [
             "http://www.lexco.kr/shop_list.php?gsp_srch_cate=207",
         ]
     },
-    {
-        "scraper": LifeFitnessScraper(),
-        "urls": [
-            "https://www.lifefitness.com/en-us/catalog?Brand=1056&Type=1079"
-            f"&pageNumber={i}#searchform"
-            for i in range(1, 10)
-        ]
-    },
+    # {
+    #     "scraper": LifeFitnessScraper(),
+    #     "urls": [
+    #         "https://www.lifefitness.com/en-us/catalog?Brand=1056&Type=1079"
+    #         f"&pageNumber={i}#searchform"
+    #         for i in range(1, 10)
+    #     ]
+    # },
     {
         "scraper": MatrixScraper("Selectorized"),
         "urls": [

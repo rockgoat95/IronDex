@@ -20,7 +20,8 @@ class HammerStrengthScraper(BaseScraper):
     def __init__(self):
         super().__init__(
             HammerStrengthScraperConfig,
-            contain_series=False
+            contain_series=False,
+            use_selenium=True
         )
         self.machine_series = ""
 
@@ -33,13 +34,19 @@ class HammerStrengthScraper(BaseScraper):
         # style 속성에서 background-image URL 추출
         style = image_elem.get('style', '')
         if style:
-            # background-image: url("...") 패턴 매칭
-            pattern = r'background-image:\s*url\(&quot;([^&]+)&quot;\)'
+            print(style)
+            pattern = r'background-image:\s*url\("(.+?)"\)'
             match = re.search(pattern, style)  # type: ignore
             if match:
                 return match.group(1)
 
         return ""
+    def handle_browser_action(self):
+        if not self.driver:
+            raise RuntimeError("Selenium WebDriver가 초기화되지 않았습니다")
+        import time
+
+        time.sleep(10)
 
 
 if __name__ == "__main__":
@@ -47,8 +54,9 @@ if __name__ == "__main__":
     urls = [
         "https://www.lifefitness.com/en-us/catalog?Brand=1053&Type=1079"
         f"&pageNumber={i}#searchform"
-        for i in range(1, 10)
+        for i in range(1, 2)
     ]
     items = scraper.scrap(urls)
     for item in items:
         print(f"- {item.name}")
+        print(f"- {item.image_url}")

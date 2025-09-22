@@ -30,6 +30,7 @@ class USPScraper(BaseScraper):
             # 쉼표 제거하고 정수로 변환
             return {"price": (price_match.group().replace(",", "")), "type": self.type_}
         return {"price": "N/A", "type": self.type_}
+
 if __name__ == "__main__":
     scraper = USPScraper("LeverageSeries")
     urls = ["https://www.uspfitness.com/LeverageSeries"]

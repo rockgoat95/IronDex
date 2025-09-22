@@ -86,10 +86,9 @@ class BaseScraper:
             "Chrome/120.0.0.0 Safari/537.36"
         )
 
-        # webdriver-manager를 우회하고 chromedriver 경로를 직접 지정
-        driver_path = "/home/user/.wdm/drivers/chromedriver/linux64/140.0.7339.185/chromedriver-linux64/chromedriver"
+        # webdriver-manager를 사용하여 자동으로 chromedriver를 설치하고 로드합니다.
         self.driver = webdriver.Chrome(
-            service=ChromeService(executable_path=driver_path), options=chrome_options
+            service=ChromeService(ChromeDriverManager().install()), options=chrome_options
         )
 
         if not self.driver:
