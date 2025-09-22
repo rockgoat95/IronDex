@@ -17,9 +17,10 @@ Gym80ScraperConfig = ScraperConfig(
 
 
 class Gym80Scraper(BaseScraper):
-    def __init__(self, machine_series: str):
+    def __init__(self, machine_series: str, type_: str = "Selectorized"):
         super().__init__(Gym80ScraperConfig)
         self.machine_series = machine_series
+        self.type_ = type_
 
     def extract_image_url(self, item: Tag) -> str:
 
@@ -36,6 +37,8 @@ class Gym80Scraper(BaseScraper):
         else:
             raise ValueError("이미지 URL을 스타일에서 추출할 수 없습니다")
 
+    def extract_additional_info(self, item: Tag) -> dict:
+        return {"type": self.type_}
 
 if __name__ == "__main__":
     scraper = Gym80Scraper("Sygnum")

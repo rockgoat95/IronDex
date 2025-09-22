@@ -9,9 +9,13 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
 from utils.model import Machine, ScraperConfig
 
 # 로깅 설정
@@ -82,7 +86,13 @@ class BaseScraper:
             "Chrome/120.0.0.0 Safari/537.36"
         )
 
-        self.driver = webdriver.Chrome(options=chrome_options)
+        # webdriver-manager가 잘못된 경로를 반환하는 문제를 해결하기 위해 executable_path를 명시적으로 사용
+        driver_path = ChromeDriverManager().install()
+                # webdriver-manager가 잘못된 경로를 반환하는 문제를 해결하기 위해 executable_path를 명시적으로 사용
+        driver_path = ChromeDriverManager().install()
+        self.driver = webdriver.Chrome(
+            service=ChromeService(executable_path=driver_path), options=chrome_options
+        )
 
         if not self.driver:
             raise RuntimeError("Selenium WebDriver 초기화 실패")
@@ -147,11 +157,14 @@ class BaseScraper:
 
         items = []
         for url in target_urls:
+            print(f"Brand: {self.brand_name}, Machine Series: {self.machine_series}, Processing URL: {url}")
             self.current_base_url = self._get_base_url(url)  # 베이스 URL 저장
             soup = self.fetch_page(url, use_selenium=self.use_selenium)
-
+            new_items = self.extract_items(soup)
             # 상품 아이템 추출
-            items.extend(self.extract_items(soup))
+            if not new_items:
+                logger.warning(f"URL에서 아이템을 찾지 못했습니다.")
+            items.extend(new_items)
 
         # 결과 저장
         if items:

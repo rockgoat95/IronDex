@@ -18,9 +18,13 @@ DraxScraperConfig = ScraperConfig(
 
 
 class DraxScraper(BaseScraper):
-    def __init__(self, machine_series, contain_series: bool = False):
+    def __init__(self, machine_series, contain_series: bool = False, type_: str = "Selectorized"):
         super().__init__(DraxScraperConfig, contain_series=contain_series)
         self.machine_series = machine_series
+        self.type_ = type_
+
+    def extract_additional_info(self, item):
+        return {"type": self.type_}
 
 
 if __name__ == "__main__":

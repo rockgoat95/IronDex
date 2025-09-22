@@ -21,11 +21,11 @@ TechnoGymScraperConfig = ScraperConfig(
 
 
 class TechnoGymScraper(BaseScraper):
-    def __init__(self, machine_series: str, type_: str):
+    def __init__(self, type_: str):
         super().__init__(
             TechnoGymScraperConfig, contain_series=False, use_selenium=True
         )
-        self.machine_series = machine_series
+        self.machine_series = ""
         self.type_ = type_
 
     def handle_browser_action(self) -> None:
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     # urls = [f"{base_url}/{category}/"]
     # items = scraper.scrap(urls)
 
-    scraper = TechnoGymScraper("Line", "Plate-loaded")
+    scraper = TechnoGymScraper("Plate-loaded")
     base_url = "https://www.technogym.com/en-INT/category"
     category = "plate-loaded"
     urls = [f"{base_url}/{category}/"]

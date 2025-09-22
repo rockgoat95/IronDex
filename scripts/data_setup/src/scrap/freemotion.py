@@ -16,9 +16,11 @@ FreemotionScraperConfig = ScraperConfig(
 
 
 class FreemotionScraper(BaseScraper):
-    def __init__(self, machine_series: str):
+    def __init__(self, machine_series: str, type_: str = "Selectorized"):
         super().__init__(FreemotionScraperConfig)
         self.machine_series = machine_series
+        self.type_ = type_
+
 
     def extract_name(self, item: Tag) -> str:
         name_elem = item.select_one(self.name_selector)
@@ -35,6 +37,8 @@ class FreemotionScraper(BaseScraper):
         code = code_elem.get_text(strip=True)
 
         return name + " " + code
+    def extract_additional_info(self, item: Tag) -> dict:
+        return {"type": self.type_}
 
 
 if __name__ == "__main__":

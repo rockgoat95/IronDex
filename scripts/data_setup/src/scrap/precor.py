@@ -15,7 +15,7 @@ PrecorScraperConfig = ScraperConfig(
     image_selector="img",
 )
 
-
+# TODO: Precor는 지금 보안이 너무 빡셈 -> 나중에 다시 시도
 class PrecorScraper(BaseScraper):
     def __init__(self, machine_series: str):
         super().__init__(PrecorScraperConfig, use_selenium=False)

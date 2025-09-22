@@ -17,9 +17,10 @@ USPScraperConfig = ScraperConfig(
 
 
 class USPScraper(BaseScraper):
-    def __init__(self, machine_series: str):
+    def __init__(self, machine_series: str, type_: str = "Selectorized"):
         super().__init__(USPScraperConfig)
         self.machine_series = machine_series
+        self.type_ = type_
 
     def extract_additional_info(self, item: Tag) -> dict[str, str]:
         pay_elem = item.select_one("p.pay.inline-blocked")
@@ -27,10 +28,8 @@ class USPScraper(BaseScraper):
         price_match = re.search(r"[\d,]+", pay_elem_text)
         if price_match:
             # 쉼표 제거하고 정수로 변환
-            return {"price": (price_match.group().replace(",", ""))}
-        return {"price": "N/A"}
-
-
+            return {"price": (price_match.group().replace(",", "")), "type": self.type_}
+        return {"price": "N/A", "type": self.type_}
 if __name__ == "__main__":
     scraper = USPScraper("LeverageSeries")
     urls = ["https://www.uspfitness.com/LeverageSeries"]

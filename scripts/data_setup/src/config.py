@@ -22,7 +22,7 @@ from scrap.techno_gym import TechnoGymScraper
 from scrap.usp import USPScraper
 from scrap.viliti import VilitiScraper
 
-scrap_configs = [
+SCRAP_CONFIG = [
     {
         "scraper": ArsenalStrengthScraper(
             machine_series="Plate-loaded", type_="Plate-loaded"),
@@ -68,84 +68,84 @@ scrap_configs = [
         ],
     },
     {
-        "scraper": DraxScraper(machine_series="Welliv Pro"),
+        "scraper": DraxScraper(machine_series="Welliv Pro", type_="Selectorized"),
         "urls": ["https://www.draxfit.com/ko/strength/welliv-pro/products"],
     },
     {
-        "scraper": DraxScraper(machine_series="Welliv"),
+        "scraper": DraxScraper(machine_series="Welliv", type_="Selectorized"),
         "urls": ["https://www.draxfit.com/ko/strength/welliv/products"],
     },
     {
-        "scraper": DraxScraper(machine_series="Welliv Pro Dual"),
+        "scraper": DraxScraper(machine_series="Welliv Pro Dual", type_="Selectorized"),
         "urls": [
             "https://www.draxfit.com/ko/strength/welliv-pro-dual/products"
         ],
     },
     {
-        "scraper": DraxScraper(machine_series="Plate-loaded"),
+        "scraper": DraxScraper(machine_series="Plate-loaded", type_="Plate-loaded"),
         "urls": ["https://www.draxfit.com/ko/strength/plate-loaded/products"],
     },
     {
-        "scraper": DynaforceScraper(),
+        "scraper": DynaforceScraper(type_="Selectorized"),
         "urls": [
             "http://www.dynaforce.co.kr/bbs/board.php?bo_table=weight&page={i}"
             for i in range(1, 3)
         ],
     },
     {
-        "scraper": DynaforceScraper(),
+        "scraper": DynaforceScraper(type_="Plate-loaded"),
         "urls": ["http://www.dynaforce.co.kr/bbs/board.php?bo_table=hammer"],
     },
     {
-        "scraper": FreemotionScraper(machine_series="Genesis"),
+        "scraper": FreemotionScraper(machine_series="Genesis", type_="Selectorized"),
         "urls": ["https://freemotionfitness.com/strength-machines/genesis/"],
     },
     {
-        "scraper": FreemotionScraper(machine_series="Genesis DS"),
+        "scraper": FreemotionScraper(machine_series="Genesis DS", type_="Selectorized"),
         "urls": ["https://freemotionfitness.com/strength-machines/genesis-ds/"],
     },
     {
-        "scraper": FreemotionScraper(machine_series="Epic Selectorized"),
+        "scraper": FreemotionScraper(machine_series="Epic Selectorized", type_="Selectorized"),
         "urls": ["https://freemotionfitness.com/strength-machines/epic-selectorized/"],
     },
     {
-        "scraper": FreemotionScraper(machine_series="Epic Plate-Loaded"),
+        "scraper": FreemotionScraper(machine_series="Epic Plate-Loaded", type_="Plate-loaded"),
         "urls": ["https://freemotionfitness.com/strength-machines/epic-plate-loaded/"],
     },
     {
-        "scraper": Gym80Scraper("Sygnum"),
+        "scraper": Gym80Scraper("Sygnum", "Selectorized"),
         "urls": ["https://www.gym80.co.uk/product-ranges/sygnum"],
     },
     {
-        "scraper": Gym80Scraper("Sygnum Dual"),
+        "scraper": Gym80Scraper("Sygnum Dual", "Selectorized"),
         "urls": ["https://www.gym80.co.uk/product-ranges/sygnum-dual"],
     },
     {
-        "scraper": Gym80Scraper("Sygnum Cable Art"),
+        "scraper": Gym80Scraper("Sygnum Cable Art", "Selectorized"),
         "urls": ["https://www.gym80.co.uk/product-ranges/sygnum-cable-art"],
     },
     {
-        "scraper": Gym80Scraper("Sygnum Combo"),
+        "scraper": Gym80Scraper("Sygnum Combo", "Selectorized"),
         "urls": ["https://www.gym80.co.uk/product-ranges/sygnum-combo"],
     },
     {
-        "scraper": Gym80Scraper("Sygnum Stations"),
+        "scraper": Gym80Scraper("Sygnum Stations", "Selectorized"),
         "urls": ["https://www.gym80.co.uk/product-ranges/sygnum-stations"],
     },
     {
-        "scraper": Gym80Scraper("Pure Kraft Strong"),
+        "scraper": Gym80Scraper("Pure Kraft Strong", "Plate-loaded"),
         "urls": ["https://www.gym80.co.uk/product-ranges/pure-kraft-strong"],
     },
     {
-        "scraper": Gym80Scraper("Pure Kraft"),
+        "scraper": Gym80Scraper("Pure Kraft", "Plate-loaded"),
         "urls": ["https://www.gym80.co.uk/product-ranges/pure-kraft"],
     },
     {
-        "scraper": Gym80Scraper("80Athletics"),
+        "scraper": Gym80Scraper("80Athletics", "Plate-loaded"),
         "urls": ["https://www.gym80.co.uk/product-ranges/80athletics"],
     },
     {
-        "scraper": Gym80Scraper("Outdoor"),
+        "scraper": Gym80Scraper("Outdoor", "Plate-loaded"),
         "urls": ["https://www.gym80.co.uk/product-ranges/outdoor"],
     },
     {
@@ -358,5 +358,47 @@ scrap_configs = [
             "https://www.panattasport.com/en/fantastic"
         ]
     },
-
+    {
+        "scraper": PrimeScraper("Evolution", "Selectorized"),
+        "urls": ["https://www.primefitnessusa.com/collections/evolution"]
+    },
+    {
+        "scraper": PrimeScraper("Hybrid", "Selectorized"),
+        "urls": [f"https://www.primefitnessusa.com/collections/hybrid?page={i}" for i in range(1, 4)]
+    },
+    {
+        "scraper": PrimeScraper("Plate-loaded", "Plate-loaded"),
+        "urls": [f"https://www.primefitnessusa.com/collections/plate-loaded-equipment?page={i}" for i in range(1, 3)]
+    },
+    {
+        "scraper": TechnoGymScraper("Plate-loaded"),
+        "urls": ["https://www.technogym.com/en-INT/category/plate-loaded"]
+    },
+    {
+        "scraper": TechnoGymScraper("Selectorized"),
+        "urls": ["https://www.technogym.com/en-INT/category/selectorized-strength-machines/"]
+    },
+    {
+        "scraper": USPScraper("LeverageSeries", "Plate-loaded"),
+        "urls": ["https://www.uspfitness.com/LeverageSeries"]
+    },
+    {
+        "scraper": VilitiScraper("Selectorized"),
+        "urls": ["https://kaesun.com/pages/upturn#none"]
+    },
+    {
+        "scraper": VilitiScraper("Selectorized"),
+        "urls": ["https://kaesun.com/pages/upturn#none"]
+    },
+    {
+        "scraper": VilitiScraper("Selectorized"),
+        "urls": ["https://kaesun.com/pages/upturn#none",
+                 "https://kaesun.com/pages/weight#none"]
+    },
+    {
+        "scraper": VilitiScraper("Plate-loaded"),
+        "urls": ["https://kaesun.com/pages/xploseries#none",
+                 "https://kaesun.com/pages/xplo#none",
+                 "https://kaesun.com/pages/plateloaded“"]
+    }
 ]

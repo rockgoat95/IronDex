@@ -17,9 +17,10 @@ PrimeScraperConfig = ScraperConfig(
 
 
 class PrimeScraper(BaseScraper):
-    def __init__(self, machine_series: str):
-        super().__init__(PrimeScraperConfig)
+    def __init__(self, machine_series: str, type_: str = "Selectorized"):
+        super().__init__(PrimeScraperConfig, contain_series=False)
         self.machine_series = machine_series
+        self.type_ = type_
 
     def extract_name(self, item: Tag) -> str:
         name_elem = item.select_one(self.name_selector)
@@ -52,9 +53,16 @@ class PrimeScraper(BaseScraper):
                 return "https:" + match.group(1)
         return ""
 
+    def extract_additional_info(self, item: Tag) -> dict:
+        price_elem = item.select_one("span.money")
+        if price_elem is not None:
+            price = price_elem.get_text(strip=True)
+            return {"price": price, "type": self.type_}
+        return {"price": "Contact for Price", "type": self.type_}
+
 
 if __name__ == "__main__":
-    scraper = PrimeScraper("Evolution")
+    scraper = PrimeScraper("Evolution", "Selectorized")
     urls = ["https://www.primefitnessusa.com/collections/evolution"]
     items = scraper.scrap(urls)
     for item in items:

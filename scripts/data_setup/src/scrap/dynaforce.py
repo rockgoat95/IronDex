@@ -15,9 +15,10 @@ DynaforceScraperConfig = ScraperConfig(
 
 
 class DynaforceScraper(BaseScraper):
-    def __init__(self):
+    def __init__(self, type_: str = "Selectorized"):
         super().__init__(DynaforceScraperConfig, contain_series=False)
         self.machine_series = ""
+        self.type_ = type_
 
     def extract_name(self, item: Tag) -> str:
 
@@ -25,6 +26,8 @@ class DynaforceScraper(BaseScraper):
 
         name = name_elems[1].get_text(strip=True) if name_elems else "N/A"
         return name
+    def extract_additional_info(self, item: Tag):
+        return {"type": self.type_}
 
 
 if __name__ == "__main__":

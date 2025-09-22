@@ -20,9 +20,10 @@ VilitiScraperConfig = ScraperConfig(
 
 
 class VilitiScraper(BaseScraper):
-    def __init__(self, machine_series: str):
+    def __init__(self, type_: str = "Selectorized"):
         super().__init__(VilitiScraperConfig, contain_series=False, use_selenium=True)
-        self.machine_series = machine_series
+        self.machine_series = ""
+        self.type_ = type_
 
     def extract_name(self, item: Tag) -> str:
         href = item.attrs.get("href")
@@ -77,12 +78,12 @@ class VilitiScraper(BaseScraper):
         price_match = re.search(r"[\d,]+", pay_elem_text)
         if price_match:
             # 쉼표 제거하고 정수로 변환
-            return {"price": (price_match.group().replace(",", ""))}
-        return {"price": "N/A"}
+            return {"price": (price_match.group().replace(",", "")), "type": self.type_}
+        return {"price": "N/A", "type": self.type_}
 
 
 if __name__ == "__main__":
-    scraper = VilitiScraper("Line")
+    scraper = VilitiScraper()
     urls = ["https://kaesun.com/pages/upturn#none"]
     items = scraper.scrap(urls)
     for item in items:

@@ -1,6 +1,6 @@
 # scripts/data_setup/main.py
 import argparse
-from config import scrap_configs
+from config import SCRAP_CONFIG
 
 
 def run_scraping():
@@ -10,17 +10,9 @@ def run_scraping():
     # A list of configurations for each machine type to scrape.
 
 
-    all_scraped_items = []
-    for config in scrap_configs:
+    for config in SCRAP_CONFIG:
         scraper = config["scraper"]
-        scraped_items = scraper.scrap(config["urls"])
-        print(f"Found {len(scraped_items)} items for {type(scraper).__name__}.")
-        all_scraped_items.extend(scraped_items)
-        print("-" * 20)
-
-    print(f"\nTotal items scraped: {len(all_scraped_items)}")
-    print("Scraping finished.")
-
+        scraper.scrap(config["urls"])
 
 def run_preprocessing():
     """Placeholder function for running preprocessing."""
