@@ -86,10 +86,8 @@ class BaseScraper:
             "Chrome/120.0.0.0 Safari/537.36"
         )
 
-        # webdriver-manager가 잘못된 경로를 반환하는 문제를 해결하기 위해 executable_path를 명시적으로 사용
-        driver_path = ChromeDriverManager().install()
-                # webdriver-manager가 잘못된 경로를 반환하는 문제를 해결하기 위해 executable_path를 명시적으로 사용
-        driver_path = ChromeDriverManager().install()
+        # webdriver-manager를 우회하고 chromedriver 경로를 직접 지정
+        driver_path = "/home/user/.wdm/drivers/chromedriver/linux64/140.0.7339.185/chromedriver-linux64/chromedriver"
         self.driver = webdriver.Chrome(
             service=ChromeService(executable_path=driver_path), options=chrome_options
         )
