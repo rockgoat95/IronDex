@@ -34,13 +34,13 @@ class HammerStrengthScraper(BaseScraper):
         # style 속성에서 background-image URL 추출
         style = image_elem.get('style', '')
         if style:
-            print(style)
             pattern = r'background-image:\s*url\("(.+?)"\)'
             match = re.search(pattern, style)  # type: ignore
             if match:
                 return match.group(1)
 
         return ""
+
     def handle_browser_action(self):
         if not self.driver:
             raise RuntimeError("Selenium WebDriver가 초기화되지 않았습니다")

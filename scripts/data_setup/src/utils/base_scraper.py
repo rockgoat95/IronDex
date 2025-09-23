@@ -15,7 +15,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.chrome import ChromeDriverManager
 from utils.model import Machine, ScraperConfig
 
 # 로깅 설정
@@ -33,6 +32,7 @@ class BaseScraper:
         scraper_config: ScraperConfig,
         contain_series: bool = True,
         use_selenium: bool = False,
+        selenium_timeout: int = 120,
     ) -> None:
         self.session = requests.Session()
         # User-Agent 설정으로 차단 방지
@@ -58,6 +58,7 @@ class BaseScraper:
         # Selenium 설정
         self.use_selenium = use_selenium
         self.driver = None
+        self.selenium_timeout = selenium_timeout
         if use_selenium:
             self._setup_selenium()
 
@@ -110,7 +111,7 @@ class BaseScraper:
         """requests를 사용한 기존 방식"""
         try:
             logger.info(f"페이지 요청: {url}")
-            response = self.session.get(url, timeout=10)
+            response = self.session.get(url, timeout=600)
             response.raise_for_status()
 
             # 인코딩 설정
@@ -131,7 +132,7 @@ class BaseScraper:
             self.driver.get(url)  # type: ignore
 
             # 페이지 로드 대기
-            WebDriverWait(self.driver, 10).until(  # type: ignore
+            WebDriverWait(self.driver, self.selenium_timeout).until(  # type: ignore
                 EC.presence_of_element_located((By.TAG_NAME, "body"))
             )
             # 브라우저 액션 (오버라이드 가능)

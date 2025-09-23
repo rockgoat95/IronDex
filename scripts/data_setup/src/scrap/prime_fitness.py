@@ -12,13 +12,13 @@ PrimeScraperConfig = ScraperConfig(
     brand_name="Prime Fitness",
     item_selector=("div[data-product-thumbnail]"),
     name_selector="a.product-thumbnail__title",
-    image_selector="div.product-thumbnail__image",
+    image_selector="img",
 )
 
 
 class PrimeScraper(BaseScraper):
     def __init__(self, machine_series: str, type_: str = "Selectorized"):
-        super().__init__(PrimeScraperConfig, contain_series=False)
+        super().__init__(PrimeScraperConfig, contain_series=False, use_selenium=True)
         self.machine_series = machine_series
         self.type_ = type_
 
@@ -34,31 +34,18 @@ class PrimeScraper(BaseScraper):
         name = name.split("|")[-1].strip()  # ' - ' 이후의 부분 제거
         return name
 
-    def extract_image_url(self, item: Tag) -> str:
-        """noscript 태그 내의 img에서 440x440 이미지 URL 추출"""
-        # noscript 태그 찾기
-        noscript = item.find("noscript")
-        if not noscript:
-            return ""
-
-        # noscript 내의 img 태그 파싱
-        img_html = str(noscript)
-        img_match = re.search(r'<img[^>]*srcset="([^"]*)"[^>]*>', img_html)
-        if img_match:
-            srcset = img_match.group(1)
-            # 440x440 이미지 URL 찾기
-            pattern = r"(//[^\s]+440x440[^\s]*)\s+2x"
-            match = re.search(pattern, srcset)
-            if match:
-                return "https:" + match.group(1)
-        return ""
-
     def extract_additional_info(self, item: Tag) -> dict:
         price_elem = item.select_one("span.money")
         if price_elem is not None:
             price = price_elem.get_text(strip=True)
             return {"price": price, "type": self.type_}
         return {"price": "Contact for Price", "type": self.type_}
+    def handle_browser_action(self):
+        if not self.driver:
+            raise RuntimeError("Selenium WebDriver가 초기화되지 않았습니다")
+        import time
+
+        time.sleep(10)
 
 
 if __name__ == "__main__":

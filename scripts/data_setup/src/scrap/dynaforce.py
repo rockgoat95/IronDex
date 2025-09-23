@@ -24,7 +24,7 @@ class DynaforceScraper(BaseScraper):
 
         name_elems = item.select("li.gall_text_href.text-center a")
 
-        name = name_elems[1].get_text(strip=True) if name_elems else "N/A"
+        name = name_elems[-1].get_text(strip=True) if name_elems else "N/A"
         return name
     def extract_additional_info(self, item: Tag):
         return {"type": self.type_}
