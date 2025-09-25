@@ -2,7 +2,9 @@
 import argparse
 import os
 import shutil
-from config import SCRAP_CONFIG
+import json
+from config.supabase import SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+from supabase import create_client, Client
 
 
 def run_scraping() -> None:
@@ -25,6 +27,8 @@ def run_scraping() -> None:
         print("잘못된 입력입니다. 'y' 또는 'n'을 입력해주세요.")
         return
 
+    from config.scrap import SCRAP_CONFIG
+
     for config in SCRAP_CONFIG:
         scraper = config["scraper"]
         scraper.scrap(config["urls"])
@@ -38,6 +42,61 @@ def run_preprocessing():
     # preprocess.load_to_supabase()
     print("Preprocessing finished.")
 
+
+def upload_logos():
+    """Uploads logos to Supabase storage."""
+    print("Uploading logos to Supabase storage...")
+
+    if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+        print("Supabase URL and Key are not set. Please check your .env file.")
+        return
+
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    bucket_name = "brand_images"
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    logos_dir = os.path.join(os.path.dirname(script_dir), "logos")
+
+    for filename in os.listdir(logos_dir):
+        if filename.startswith("."):
+            continue
+
+        file_path = os.path.join(logos_dir, filename)
+        if os.path.isfile(file_path):
+            with open(file_path, "rb") as f:
+                try:
+                    supabase.storage.from_(bucket_name).upload(filename, f)
+                    print(f"Successfully uploaded {filename}")
+                except Exception as e:
+                    print(f"Error uploading {filename}: {e}")
+
+    print("Logo upload finished.")
+
+
+def upload_brands_data():
+    """Uploads brand data from JSON file to Supabase table."""
+    print("Uploading brands data to Supabase table...")
+
+    if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+        print("Supabase URL and Key are not set. Please check your .env file.")
+        return
+
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    table_name = "brands"
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    json_path = os.path.join(os.path.dirname(script_dir), "init_data", "brand.json")
+
+    with open(json_path, "r") as f:
+        brands_data = json.load(f)
+
+    try:
+        supabase.table(table_name).upsert(brands_data).execute()
+        print(f"Successfully uploaded data to {table_name} table.")
+    except Exception as e:
+        print(f"Error uploading data: {e}")
+
+    print("Brand data upload finished.")
 
 def main():
     """Main function to parse arguments and run tasks."""
@@ -54,6 +113,18 @@ def main():
         "preprocess", help="Run data preprocessing and loading tasks."
     )
     parser_preprocess.set_defaults(func=run_preprocessing)
+
+    # --- Upload Logos Command ---
+    parser_upload = subparsers.add_parser(
+        "upload_logos", help="Upload logos to Supabase storage."
+    )
+    parser_upload.set_defaults(func=upload_logos)
+
+    # --- Upload Brands Command ---
+    parser_upload_brands = subparsers.add_parser(
+        "upload_brands", help="Upload brands data to Supabase table."
+    )
+    parser_upload_brands.set_defaults(func=upload_brands_data)
 
     args = parser.parse_args()
 
