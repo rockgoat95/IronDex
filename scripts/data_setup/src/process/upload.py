@@ -1,8 +1,9 @@
-
-import os
 import json
-from config.supabase import SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
-from supabase import create_client, Client
+import os
+
+from config.supabase import SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL
+from supabase import Client, create_client
+
 
 def upload_logos():
     """Uploads logos to Supabase storage."""
@@ -27,8 +28,10 @@ def upload_logos():
         if os.path.isfile(file_path):
             with open(file_path, "rb") as f:
                 try:
-                    res = supabase.storage.from_(bucket_name).list(path=os.path.dirname(filename))
-                    if filename not in [item['name'] for item in res]:
+                    res = supabase.storage.from_(bucket_name).list(
+                        path=os.path.dirname(filename)
+                    )
+                    if filename not in [item["name"] for item in res]:
                         supabase.storage.from_(bucket_name).upload(filename, f)
                         print(f"Successfully uploaded {filename}")
                     else:

@@ -1,6 +1,6 @@
-
 import json
 import os
+
 
 def run_preprocessing():
     """
@@ -31,14 +31,14 @@ def run_preprocessing():
     for filename in os.listdir(scraped_data_dir):
         if filename.endswith(".json"):
             filepath = os.path.join(scraped_data_dir, filename)
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 try:
                     data = json.load(f)
                     for machine in data:
-                        if 'detail' in machine and isinstance(machine['detail'], dict):
-                            for key, value in machine['detail'].items():
+                        if "detail" in machine and isinstance(machine["detail"], dict):
+                            for key, value in machine["detail"].items():
                                 machine[key] = value
-                            del machine['detail']
+                            del machine["detail"]
 
                         all_machines.append(machine)
                         all_keys.update(machine.keys())
@@ -59,8 +59,11 @@ def run_preprocessing():
         normalized_machines.append(normalized_machine)
 
     print(f"Writing {len(normalized_machines)} normalized machines to {output_file}...")
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         json.dump(normalized_machines, f, indent=4, ensure_ascii=False)
 
-    print(f"Successfully merged, flattened, and normalized {len(normalized_machines)} machines into {output_file}")
+    print(
+        f"Successfully merged, flattened, and normalized "
+        "{len(normalized_machines)} machines into {output_file}"
+    )
     print("Preprocessing finished.")
