@@ -8,7 +8,7 @@ from utils.model import ScraperConfig
 logger = logging.getLogger(__name__)
 
 FreemotionScraperConfig = ScraperConfig(
-    brand_name="Freemotion Fitness",
+    brand_name="Freemotion",
     item_selector="div.prod-frame",
     name_selector="h5",
     image_selector="img",

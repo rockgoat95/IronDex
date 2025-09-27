@@ -7,7 +7,7 @@ from utils.model import ScraperConfig
 logger = logging.getLogger(__name__)
 
 AtlantisScraperConfig = ScraperConfig(
-    brand_name="Atlantis",
+    brand_name="Atlantis Strength",
     item_selector="a.grid-view-item__link",
     name_selector="div.h4.grid-view-item__title.product-card__title",
     image_selector="img.grid-view-item__image",

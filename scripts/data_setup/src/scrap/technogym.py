@@ -13,7 +13,7 @@ from utils.model import ScraperConfig
 logger = logging.getLogger(__name__)
 
 TechnoGymScraperConfig = ScraperConfig(
-    brand_name="Techno Gym",
+    brand_name="Technogym",
     item_selector="a.css-1jke4yk",
     name_selector="h3.chakra-text.css-179z6sb",
     image_selector="img.chakra-image.css-9tsw64",
