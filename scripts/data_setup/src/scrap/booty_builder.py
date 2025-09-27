@@ -28,7 +28,7 @@ class BootyBuilderScraper(BaseScraper):
             raise RuntimeError("Selenium WebDriver가 초기화되지 않았습니다")
         import time
 
-        time.sleep(30)
+        time.sleep(120)
 
 
 if __name__ == "__main__":
