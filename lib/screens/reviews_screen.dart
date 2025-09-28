@@ -8,15 +8,14 @@ import '../widgets/homepage/machine_list.dart';
 import '../widgets/homepage/review_list.dart';
 import 'writing_review.dart';
 
-class Home extends StatefulWidget {
-  final String title;
-  const Home({super.key, required this.title});
+class ReviewsScreen extends StatefulWidget {
+  const ReviewsScreen({super.key});
 
   @override
-  State<Home> createState() => _HomeState();
+  State<ReviewsScreen> createState() => _ReviewsScreenState();
 }
 
-class _HomeState extends State<Home> {
+class _ReviewsScreenState extends State<ReviewsScreen> {
   // 필터 상태
   String? selectedBrandId;
   List<String>? selectedBodyParts;
@@ -98,7 +97,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(177, 226, 226, 226),
+        backgroundColor: Colors.white,
         elevation: 1,
         title: Row(
           mainAxisSize: MainAxisSize.min,
