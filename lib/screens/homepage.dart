@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import '../widgets/homepage/brand_list.dart';
-import '../widgets/homepage/review_list.dart';
-import '../widgets/homepage/machine_list.dart';
-import '../widgets/homepage/body_part_chips.dart';
-import '../widgets/homepage/detail_filter_modal.dart';
+
 import '../constants/filter_constants.dart';
+import '../widgets/homepage/body_part_chips.dart';
+import '../widgets/homepage/brand_list.dart';
+import '../widgets/homepage/detail_filter_modal.dart';
+import '../widgets/homepage/machine_list.dart';
+import '../widgets/homepage/review_list.dart';
 import 'writing_review.dart';
 
 class Home extends StatefulWidget {
@@ -42,20 +43,22 @@ class _HomeState extends State<Home> {
   void _onBodyPartsChanged(List<String>? bodyParts) {
     setState(() {
       selectedBodyParts = bodyParts;
-      
+
       // 부위 변경시 관련없는 움직임 제거
       if (selectedMovements != null && bodyParts != null) {
         // 선택된 부위들에 대한 가능한 움직임들 계산
         Set<String> availableMovements = {};
         for (String bodyPart in bodyParts) {
-          availableMovements.addAll(FilterConstants.bodyPartMovements[bodyPart] ?? []);
+          availableMovements.addAll(
+            FilterConstants.bodyPartMovements[bodyPart] ?? [],
+          );
         }
-        
+
         // 기존 선택된 움직임 중 관련없는 것들 제거
         selectedMovements = selectedMovements!
             .where((movement) => availableMovements.contains(movement))
             .toList();
-        
+
         if (selectedMovements!.isEmpty) {
           selectedMovements = null;
         }
@@ -90,17 +93,37 @@ class _HomeState extends State<Home> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        backgroundColor: const Color.fromARGB(177, 226, 226, 226),
+        elevation: 1,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('lib/logo/image.png', height: 32),
+            const SizedBox(width: 8),
+            const Text(
+              'Iron Dex',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(icon: const Icon(Icons.search), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.notifications_none),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: Stack(
         children: [
           Container(
             color: Colors.white,
-            child: Column(
+            child: ListView(
               children: [
                 const SizedBox(height: 12),
                 BrandGrid(
@@ -149,14 +172,12 @@ class _HomeState extends State<Home> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Expanded(
-                  child: ReviewList(
-                    brandId: selectedBrandId,
-                    bodyParts: selectedBodyParts,
-                    movements: selectedMovements,
-                    machineType: selectedMachineType,
-                    selectedMachineId: selectedMachineId,
-                  ),
+                ReviewList(
+                  brandId: selectedBrandId,
+                  bodyParts: selectedBodyParts,
+                  movements: selectedMovements,
+                  machineType: selectedMachineType,
+                  selectedMachineId: selectedMachineId,
                 ),
               ],
             ),

@@ -85,6 +85,8 @@ class _ReviewListState extends State<ReviewList> {
     }
 
     return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: reviews.length,
       itemBuilder: (context, index) {
         return ReviewCard(review: reviews[index]);
