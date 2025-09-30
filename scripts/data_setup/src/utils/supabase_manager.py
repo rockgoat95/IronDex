@@ -1,7 +1,6 @@
 import os
 import requests
 import uuid
-import time
 from supabase import create_client, Client
 from config.supabase import SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 

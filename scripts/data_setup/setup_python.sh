@@ -36,7 +36,7 @@ echo "⬆️  pip 업그레이드 중..."
 REQUIREMENTS_PATH="$PROJECT_ROOT/scripts/data_setup/requirements.txt"
 if [ -f "$REQUIREMENTS_PATH" ]; then
     echo "📥 Python 의존성 설치 중..."
-    "$PIP_EXEC" install -r "$REQUIREMENTS_PATH"
+    "$PIP_EXEC" install --no-cache-dir -r "$REQUIREMENTS_PATH"
     echo "✅ Python 의존성 설치 완료"
 else
     echo "⚠️  $REQUIREMENTS_PATH 파일을 찾을 수 없습니다"
@@ -44,7 +44,7 @@ fi
 
 # 4. direnv 설정 (설치되어 있는 경우)
 if command -v direnv &> /dev/null; then
-    echo "🔄 direnv 설정 중..."    
+    echo "🔄 direnv 설정 중..."
     cd "$PROJECT_ROOT"
 
     # .envrc 파일이 없으면 생성합니다.

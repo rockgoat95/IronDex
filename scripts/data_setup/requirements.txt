@@ -5,6 +5,6 @@ beautifulsoup4==4.12.2
 lxml==4.9.3
 selenium==4.35.0
 webdriver-manager==4.0.2
-supabase==2.4.2
-gotrue==2.4.1
-curl_cffi
+supabase
+gotrue
+google-generativeai>=0.8.0
