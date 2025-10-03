@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 PostgrestFilterBuilder _buildMachineQuery({
   String? brandId,
   List<String>? bodyParts,
-  List<String>? movements,
   String? machineType,
   required String selectClause,
 }) {
@@ -17,15 +16,11 @@ PostgrestFilterBuilder _buildMachineQuery({
   if (brandId != null && brandId.isNotEmpty) {
     query = query.eq('brand_id', brandId);
   }
-  
+
   if (bodyParts != null && bodyParts.isNotEmpty) {
     query = query.overlaps('body_parts', bodyParts);
   }
-  
-  if (movements != null && movements.isNotEmpty) {
-    query = query.overlaps('movements', movements);
-  }
-  
+
   if (machineType != null && machineType.isNotEmpty) {
     query = query.eq('type', machineType);
   }
@@ -44,13 +39,11 @@ Future<List<Map<String, dynamic>>> fetchBrands() async {
 Future<List<Map<String, dynamic>>> fetchMachines({
   String? brandId,
   List<String>? bodyParts,
-  List<String>? movements,
   String? machineType,
 }) async {
   final query = _buildMachineQuery(
     brandId: brandId,
     bodyParts: bodyParts,
-    movements: movements,
     machineType: machineType,
     selectClause: '''
       id,
@@ -60,7 +53,6 @@ Future<List<Map<String, dynamic>>> fetchMachines({
       review_cnt,
       score,
       body_parts,
-      movements,
       type,
       brand:brands (
         name,
@@ -80,12 +72,9 @@ Future<List<Map<String, dynamic>>> fetchMachineReviews({
   String? brandId,
   String? machineId,
   List<String>? bodyParts,
-  List<String>? movements,
   String? type,
 }) async {
-  var query = Supabase.instance.client
-      .from('machine_reviews')
-      .select('''
+  var query = Supabase.instance.client.from('machine_reviews').select('''
         id,
         user_id,
         rating,
@@ -103,7 +92,6 @@ Future<List<Map<String, dynamic>>> fetchMachineReviews({
           brand_id,
           body_parts,
           type,
-          movements,
           status,
           brand:brands (
             id,
@@ -115,7 +103,7 @@ Future<List<Map<String, dynamic>>> fetchMachineReviews({
 
   // 승인된 머신만
   query = query.eq('machine.status', 'approved');
-  
+
   // 특정 머신 ID가 지정된 경우 우선 적용
   if (machineId != null && machineId.isNotEmpty) {
     query = query.eq('machine_id', machineId);
@@ -124,23 +112,19 @@ Future<List<Map<String, dynamic>>> fetchMachineReviews({
     if (brandId != null && brandId.isNotEmpty) {
       query = query.eq('machine.brand_id', brandId);
     }
-    
+
     if (bodyParts != null && bodyParts.isNotEmpty) {
       query = query.overlaps('machine.body_parts', bodyParts);
     }
-    
-    if (movements != null && movements.isNotEmpty) {
-      query = query.overlaps('machine.movements', movements);
-    }
-    
+
     if (type != null && type.isNotEmpty) {
       query = query.eq('machine.type', type);
     }
   }
-  
+
   final response = await query
       .order('like_count', ascending: false) // 리뷰 like_count 순으로 정렬
       .range(offset, offset + limit - 1);
-  
+
   return response;
 }

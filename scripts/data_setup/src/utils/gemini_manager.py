@@ -11,7 +11,7 @@ class GeminiManager:
     """
     Gemini API와의 상호작용을 관리하고 컨텍스트 캐싱 기능을 제공하는 클래스.
     """
-    def __init__(self, model_name: str = "gemini-1.5-flash"):
+    def __init__(self, model_name: str = "gemini-2.5-flash"):
         """
         GeminiManager를 초기화합니다.
 
@@ -28,19 +28,45 @@ class GeminiManager:
         )
         self.image_processor = ImageProcessor()
 
-    def update_model_with_context(self, instruction: str, context: str, ttl_seconds: int = 3600):
+    def update_model_with_context(self, instruction: str, context: str, ttl_seconds: int = 3600) -> bool:
+        """
+        모델을 업데이트하고 캐시를 생성합니다.
+        """
         self.clear_cache()
 
-        self.cache = genai.caching.CachedContent.create(
-            model=f"models/{self.model_name}",
-            display_name=f"cache-for-{self.model_name}-{self.cached_count}",
-            system_instruction=instruction,
-            contents=[context],
-            ttl=timedelta(seconds=ttl_seconds),
-        )
-        self.cached_count += 1
+        # 토큰 수 추정 (대략적으로 문자 수 / 4)
+        estimated_tokens = len(context) // 4
+        if estimated_tokens < 1024:
+            print(f"Warning: Context too small for caching ({estimated_tokens} tokens < 1024). Using standard model.")
+            # 캐시 없이 일반 모델 사용
+            self.model = genai.GenerativeModel(
+                model_name=self.model_name,
+                system_instruction=f"{instruction}\n\nContext: {context}",
+            )
+            return False
 
-        self.model = genai.GenerativeModel.from_cached_content(cached_content=self.cache)
+        try:
+            self.cache = genai.caching.CachedContent.create(
+                model=f"models/{self.model_name}",
+                display_name=f"cache-for-{self.model_name}-{self.cached_count}",
+                system_instruction=instruction,
+                contents=[context],
+                ttl=timedelta(seconds=ttl_seconds),
+            )
+            self.cached_count += 1
+
+            self.model = genai.GenerativeModel.from_cached_content(cached_content=self.cache)
+            print(f"Cache created successfully with {estimated_tokens} estimated tokens.")
+
+            return True
+        except Exception as e:
+            print(f"Failed to create cache: {e}")
+            print("Using standard model without caching.")
+            self.model = genai.GenerativeModel(
+                model_name=self.model_name,
+                system_instruction=f"{instruction}\n\nContext: {context}",
+            )
+            return False
 
     def generate_content(self, prompt: str) -> str:
         response = self.model.generate_content(prompt)

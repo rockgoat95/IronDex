@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
+
 import '../../supabase/fetcher.dart';
 import 'machine_card.dart';
 
 class MachineList extends StatefulWidget {
   final String? brandId;
   final List<String>? bodyParts;
-  final List<String>? movements;
   final String? machineType;
   final String? selectedMachineId;
   final Function(String?)? onMachineSelected;
-  
+
   const MachineList({
     super.key,
     this.brandId,
     this.bodyParts,
-    this.movements,
     this.machineType,
     this.selectedMachineId,
     this.onMachineSelected,
@@ -40,7 +39,6 @@ class _MachineListState extends State<MachineList> {
     // 필터가 변경되면 다시 가져오기
     if (oldWidget.brandId != widget.brandId ||
         oldWidget.bodyParts != widget.bodyParts ||
-        oldWidget.movements != widget.movements ||
         oldWidget.machineType != widget.machineType ||
         oldWidget.selectedMachineId != widget.selectedMachineId) {
       fetch();
@@ -51,14 +49,13 @@ class _MachineListState extends State<MachineList> {
     setState(() {
       loading = true;
     });
-    
+
     final result = await fetchMachines(
       brandId: widget.brandId,
       bodyParts: widget.bodyParts,
-      movements: widget.movements,
       machineType: widget.machineType,
     );
-    
+
     setState(() {
       machines = result;
       loading = false;
@@ -90,7 +87,7 @@ class _MachineListState extends State<MachineList> {
           final brand = m['brand'] ?? {};
           final machineId = m['id']?.toString();
           final isSelected = widget.selectedMachineId == machineId;
-          
+
           return GestureDetector(
             onTap: () {
               // 같은 머신 클릭시 선택 해제, 다른 머신 클릭시 선택
@@ -101,7 +98,9 @@ class _MachineListState extends State<MachineList> {
               imageUrl: m['image_url'] ?? '',
               brandName: brand['name'] ?? '',
               brandLogoUrl: brand['logo_url'] ?? '',
-              score: m['score'] != null ? double.tryParse(m['score'].toString()) : null,
+              score: m['score'] != null
+                  ? double.tryParse(m['score'].toString())
+                  : null,
               reviewCnt: m['review_cnt'] is int ? m['review_cnt'] as int : 0,
               isSelected: isSelected,
             ),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'screens/main_screen.dart'; // 메인 화면 import
+import 'screens/main_screen.dart';
+import 'screens/auth_screen.dart'; // AuthScreen import
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,21 +18,59 @@ void main() async {
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
   );
-  runApp(MachineDex());
+  runApp(const MyApp());
 }
 
-class MachineDex extends StatelessWidget {
-  const MachineDex({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'IronDex',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
       ),
-      home: const MainScreen(), 
+      home: const _SplashScreen(),
+    );
+  }
+}
+
+class _SplashScreen extends StatefulWidget {
+  const _SplashScreen({Key? key}) : super(key: key);
+
+  @override
+  State<_SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<_SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _redirect();
+  }
+
+  Future<void> _redirect() async {
+    // Wait for the widget to be fully built before navigating
+    await Future.delayed(Duration.zero);
+
+    final session = Supabase.instance.client.auth.currentSession;
+
+    if (!mounted) return;
+
+    if (session != null) {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const MainScreen()));
+    } else {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const AuthScreen()));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }

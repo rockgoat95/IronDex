@@ -151,7 +151,6 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 MachineList(
                   brandId: selectedBrandId,
                   bodyParts: selectedBodyParts,
-                  movements: selectedMovements,
                   machineType: selectedMachineType,
                   selectedMachineId: selectedMachineId,
                   onMachineSelected: _onMachineSelected,
@@ -174,7 +173,6 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 ReviewList(
                   brandId: selectedBrandId,
                   bodyParts: selectedBodyParts,
-                  movements: selectedMovements,
                   machineType: selectedMachineType,
                   selectedMachineId: selectedMachineId,
                 ),

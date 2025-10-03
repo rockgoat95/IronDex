@@ -3,7 +3,7 @@ import os
 
 class Preprocessor:
     """
-    Handles the local preprocessing of machine data, focusing on merging and 
+    Handles the local preprocessing of machine data, focusing on merging and
     normalizing scraped data from JSON files.
     """
 
@@ -58,7 +58,7 @@ class Preprocessor:
                             machine.update(machine.pop("detail"))
                         all_machines.append(machine)
                         all_keys.update(machine.keys())
-        
+
         print(f"Found {len(all_keys)} unique keys across {len(all_machines)} machines.")
 
         print("Normalizing machine objects...")

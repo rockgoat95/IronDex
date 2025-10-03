@@ -5,7 +5,6 @@ import 'review_card.dart';
 class ReviewList extends StatefulWidget {
   final String? brandId;
   final List<String>? bodyParts;
-  final List<String>? movements;
   final String? machineType;
   final String? selectedMachineId; // 특정 머신 선택시
   
@@ -13,7 +12,6 @@ class ReviewList extends StatefulWidget {
     super.key,
     this.brandId,
     this.bodyParts,
-    this.movements,
     this.machineType,
     this.selectedMachineId,
   });
@@ -38,7 +36,6 @@ class _ReviewListState extends State<ReviewList> {
     // 필터가 변경되면 다시 가져오기
     if (oldWidget.brandId != widget.brandId ||
         oldWidget.bodyParts != widget.bodyParts ||
-        oldWidget.movements != widget.movements ||
         oldWidget.machineType != widget.machineType ||
         oldWidget.selectedMachineId != widget.selectedMachineId) {
       fetchReviews();
@@ -52,7 +49,6 @@ class _ReviewListState extends State<ReviewList> {
         brandId: widget.brandId,
         machineId: widget.selectedMachineId,
         bodyParts: widget.bodyParts,
-        movements: widget.movements,
         type: widget.machineType,
         limit: 20,
       );
