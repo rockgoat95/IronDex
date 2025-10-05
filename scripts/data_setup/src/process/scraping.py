@@ -1,6 +1,6 @@
-
 import os
 import shutil
+
 
 def run_scraping() -> None:
     """Runs all scraping tasks."""
@@ -10,9 +10,11 @@ def run_scraping() -> None:
     data_setup_dir = os.path.dirname(os.path.dirname(script_dir))
     data_dir = os.path.join(data_setup_dir, "scraped_data")
 
-    answer = input(
-        f"기존에 수집된 데이터를 모두 삭제하고 새로 수집하시겠습니까? (y/n): "
-    ).strip().lower()
+    answer = (
+        input("기존에 수집된 데이터를 모두 삭제하고 새로 수집하시겠습니까? (y/n): ")
+        .strip()
+        .lower()
+    )
     if answer == "y":
         if os.path.exists(data_dir):
             shutil.rmtree(data_dir)

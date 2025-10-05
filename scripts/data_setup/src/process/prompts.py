@@ -1,4 +1,3 @@
-
 BRAND_CONTEXT_PROMPT = """
 아래는 '{brand}' 브랜드의 헬스장 기구 목록입니다.
 이후 요청되는 Task 에서 해당 내용을 참고해주세요.
@@ -46,7 +45,8 @@ CLASSIFICATION_PROMPT = """
 
 **위 머신이 어떤 부위를 위한 머신인지 분류해 주세요.!! **
 분류는 반드시 다음 카테고리 중 하나로 해주세요:
-Chest, Back, Shoulders, Trapezius, Biceps, Triceps, Forearms, Abs, Quadriceps, Hamstrings, Core, Full Body, Hip, Calves, Mitral, ETC
+Chest, Back, Shoulders, Trapezius, Biceps, Triceps, Forearms, Abs,
+Quadriceps, Hamstrings, Core, Full Body, Hip, Calves, Mitral, ETC
 
 **반드시 주동근 위주로 분류해 주세요.**
  - 너무 개입이 적은 근육은 제외해주세요

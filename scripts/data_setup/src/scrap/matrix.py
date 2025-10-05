@@ -62,6 +62,7 @@ class MatrixScraper(BaseScraper):
 
         except (TimeoutException, NoSuchElementException):
             logger.info("더 이상 Load More 버튼이 없습니다")
+
     def extract_additional_info(self, item: Tag) -> dict[str, str]:
         return {"type": self.type_}
 

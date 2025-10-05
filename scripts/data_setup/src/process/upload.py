@@ -1,7 +1,8 @@
-import os
 import json
-from utils.supabase_manager import SupabaseManager
+import os
+
 from config.supabase import SUPABASE_URL
+from utils.supabase_manager import SupabaseManager
 
 
 def run_logo_uploads(uploader: SupabaseManager):
@@ -28,7 +29,7 @@ def run_logo_uploads(uploader: SupabaseManager):
                 uploader.upload_from_local_path(
                     bucket_name=bucket_name,
                     file_path=file_path,
-                    destination_path=filename
+                    destination_path=filename,
                 )
             except Exception as e:
                 print(f"Error uploading {filename}: {e}")
@@ -58,6 +59,7 @@ def run_brand_data_upload(sb_manager: SupabaseManager):
     sb_manager.upsert_to_table(table_name=table_name, data=brands_data)
     print("--- Brand Data Upload Finished ---")
 
+
 def run_machine_image_upload(sb_manager: SupabaseManager):
     """
     Reads machine data, uploads images to Supabase if they haven't been uploaded yet,
@@ -69,9 +71,12 @@ def run_machine_image_upload(sb_manager: SupabaseManager):
     data_setup_dir = os.path.dirname(os.path.dirname(script_dir))
 
     source_file = os.path.join(data_setup_dir, "init_data", "machines.json")
-    output_file = os.path.join(data_setup_dir, "init_data", "machines_with_supabase_urls.json")
+    output_file = os.path.join(
+        data_setup_dir, "init_data", "machines_with_supabase_urls.json"
+    )
 
-    # If the output file already exists, use it as the source to make the script resumable.
+    # If the output file already exists,
+    # use it as the source to make the script resumable.
     # Otherwise, use the original machine data.
     if os.path.exists(output_file):
         print(f"Resuming from existing file: {output_file}")
@@ -84,7 +89,9 @@ def run_machine_image_upload(sb_manager: SupabaseManager):
         with open(input_to_process, "r", encoding="utf-8") as f:
             machines = json.load(f)
     except FileNotFoundError:
-        print(f"Input data file not found at {input_to_process}. Skipping image upload.")
+        print(
+            f"Input data file not found at {input_to_process}. Skipping image upload."
+        )
         return
     except json.JSONDecodeError:
         print(f"Error decoding JSON from {input_to_process}. Skipping image upload.")
@@ -97,15 +104,17 @@ def run_machine_image_upload(sb_manager: SupabaseManager):
 
     for i, machine in enumerate(machines):
         image_url = machine.get("image_url")
-        machine_name = machine.get('name', 'N/A')
+        machine_name = machine.get("name", "N/A")
 
         # Only upload if the URL is not empty and is not already a Supabase URL
         if image_url and not image_url.startswith(supabase_url_prefix):
-            print(f"Processing image {i+1}/{total_machines} for machine: {machine_name}...")
+            print(
+                f"Processing image {i+1}/{total_machines} "
+                f"for machine: {machine_name}..."
+            )
             if image_url.startswith("http"):
                 new_url = sb_manager.upload_from_url(
-                    bucket_name=bucket_name,
-                    url=image_url
+                    bucket_name=bucket_name, url=image_url
                 )
                 if new_url:
                     machine["image_url"] = new_url
@@ -125,20 +134,25 @@ def run_machine_image_upload(sb_manager: SupabaseManager):
     print(f"Successfully wrote updated machine data to {output_file}")
     print("--- Machine Image Upload Finished ---")
 
+
 def run_machine_data_upload(sb_manager: SupabaseManager):
     """Uploads machine data from the JSON file to the Supabase 'machines' table."""
     print("\n--- Starting Machine Data Upload ---")
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     data_setup_dir = os.path.dirname(os.path.dirname(script_dir))
-    json_path = os.path.join(data_setup_dir, "init_data", "machines_with_supabase_urls_and_preprocessed.json")
+    json_path = os.path.join(
+        data_setup_dir, "init_data", "machines_with_supabase_urls_and_preprocessed.json"
+    )
     table_name = "machines"
 
     try:
         with open(json_path, "r", encoding="utf-8") as f:
             machines_data = json.load(f)
     except FileNotFoundError:
-        print(f"Machine data file not found at {json_path}. Skipping machine data upload.")
+        print(
+            f"Machine data file not found at {json_path}. Skipping machine data upload."
+        )
         return
     except json.JSONDecodeError:
         print(f"Error decoding JSON from {json_path}. Skipping machine data upload.")
@@ -159,8 +173,12 @@ def process_machine_json_for_database(sb_manager: SupabaseManager):
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     data_setup_dir = os.path.dirname(os.path.dirname(script_dir))
-    input_path = os.path.join(data_setup_dir, "init_data", "machines_with_supabase_urls.json")
-    output_path = os.path.join(data_setup_dir, "init_data", "machines_with_supabase_urls_and_preprocessed.json")
+    input_path = os.path.join(
+        data_setup_dir, "init_data", "machines_with_supabase_urls.json"
+    )
+    output_path = os.path.join(
+        data_setup_dir, "init_data", "machines_with_supabase_urls_and_preprocessed.json"
+    )
 
     # Load current machine data
     with open(input_path, "r", encoding="utf-8") as f:
@@ -170,10 +188,10 @@ def process_machine_json_for_database(sb_manager: SupabaseManager):
     brands_response = sb_manager.client.table("brands").select("id, name").execute()
     brands_data = brands_response.data
 
-        # Create brand name to ID mapping (case-insensitive)
+    # Create brand name to ID mapping (case-insensitive)
     brand_name_to_id = {}
     for brand in brands_data:
-        brand_name_to_id[brand['name'].lower()] = brand['id']
+        brand_name_to_id[brand["name"].lower()] = brand["id"]
 
     print(f"Loaded {len(brands_data)} brands from database")
 
@@ -185,18 +203,21 @@ def process_machine_json_for_database(sb_manager: SupabaseManager):
         processed_machine = {}
 
         # Copy fields we want to keep
-        for field in ['image_url', 'name', 'type']:
+        for field in ["image_url", "name", "type"]:
             if field in machine:
                 processed_machine[field] = machine[field]
 
         # Convert brand to brand_id
-        brand_name = machine.get('brand', '').lower()
+        brand_name = machine.get("brand", "").lower()
         if brand_name in brand_name_to_id:
-            processed_machine['brand_id'] = brand_name_to_id[brand_name]
+            processed_machine["brand_id"] = brand_name_to_id[brand_name]
         else:
-            processed_machine['brand_id'] = None
-            missing_brands.add(machine.get('brand', 'Unknown'))
-            print(f"  Warning: Brand '{machine.get('brand')}' not found in database for machine: {machine.get('name')}")
+            processed_machine["brand_id"] = None
+            missing_brands.add(machine.get("brand", "Unknown"))
+            print(
+                f"  Warning: Brand '{machine.get('brand')}' not found in database for "
+                "machine: {machine.get('name')}"
+            )
 
         processed_machine["status"] = "approved"
         processed_machines.append(processed_machine)
@@ -213,7 +234,11 @@ def process_machine_json_for_database(sb_manager: SupabaseManager):
     # Save processed data back to JSON file
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(processed_machines, f, indent=4, ensure_ascii=False)
-    print(f"✅ Successfully processed and saved {len(processed_machines)} machines to {output_path}")
+    print(
+        f"✅ Successfully processed and saved {len(processed_machines)} "
+        "machines to {output_path}"
+    )
+
 
 def run_brand_uploads():
     """Initializes the manager and runs all brand upload tasks."""
