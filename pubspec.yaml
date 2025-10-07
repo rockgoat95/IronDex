@@ -1,4 +1,4 @@
-name: IronDex
+name: Iron_Dex
 description: "피트니스 머신 리뷰 앱"
 publish_to: 'none'
 
@@ -13,7 +13,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_dotenv: ^6.0.0
   image_picker: ^1.2.0
-  provider: ^6.1.5+1
 
 dev_dependencies:
   flutter_test:
