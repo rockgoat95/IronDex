@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'screens/main_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'providers/auth_provider.dart';
+import 'providers/machine_provider.dart';
+import 'providers/review_provider.dart';
 import 'screens/auth_screen.dart'; // AuthScreen import
+import 'screens/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,11 +19,17 @@ void main() async {
     throw Exception("Supabase URL or Anon Key is missing in .env file");
   }
 
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => MachineProvider()),
+        ChangeNotifierProvider(create: (_) => ReviewProvider()),
+      ],
+      child: const MyApp(),
+    ),
   );
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -54,23 +65,23 @@ class _SplashScreenState extends State<_SplashScreen> {
     // Wait for the widget to be fully built before navigating
     await Future.delayed(Duration.zero);
 
-    final session = Supabase.instance.client.auth.currentSession;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     if (!mounted) return;
 
-    if (session != null) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const MainScreen()));
+    if (authProvider.isLoggedIn) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const MainScreen()),
+      );
     } else {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const AuthScreen()));
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const AuthScreen()),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

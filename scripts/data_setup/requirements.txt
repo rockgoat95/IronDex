@@ -9,3 +9,5 @@ supabase
 gotrue
 google-generativeai>=0.8.0
 Pillow
+flake8==7.3.0
+black==25.9.0

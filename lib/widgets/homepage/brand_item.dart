@@ -28,8 +28,13 @@ class BrandItem extends StatelessWidget {
             child: Card(
               color: Colors.white,
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Icon(isUpIcon ? Icons.expand_less : Icons.add, color: Colors.grey),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                isUpIcon ? Icons.expand_less : Icons.add,
+                color: Colors.grey,
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -67,25 +72,26 @@ class BrandItem extends StatelessWidget {
           child: Card(
             color: Colors.white,
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             clipBehavior: Clip.antiAlias,
             child: image != null
-                ? Image.network(
-                    image!,
-                    fit: BoxFit.contain,
-                  )
+                ? Image.network(image!, fit: BoxFit.contain)
                 : const Icon(Icons.business), // Default icon when image is null
           ),
         ),
         const SizedBox(height: 4),
-        SizedBox(
-          width: 52,
-          child: Text(
-            name,
-            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
+        Flexible(
+          child: SizedBox(
+            width: 52,
+            child: Text(
+              name,
+              style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
       ],
