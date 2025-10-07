@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../supabase/fetcher.dart';
 import 'review_card.dart';
 
@@ -7,7 +8,7 @@ class ReviewList extends StatefulWidget {
   final List<String>? bodyParts;
   final String? machineType;
   final String? selectedMachineId; // 특정 머신 선택시
-  
+
   const ReviewList({
     super.key,
     this.brandId,
@@ -44,7 +45,9 @@ class _ReviewListState extends State<ReviewList> {
 
   Future<void> fetchReviews() async {
     try {
-      print('ReviewList fetchReviews - brandId: ${widget.brandId}, bodyParts: ${widget.bodyParts}, machineId: ${widget.selectedMachineId}');
+      debugPrint(
+        'ReviewList fetchReviews - brandId: ${widget.brandId}, bodyParts: ${widget.bodyParts}, machineId: ${widget.selectedMachineId}',
+      );
       final result = await fetchMachineReviews(
         brandId: widget.brandId,
         machineId: widget.selectedMachineId,
@@ -52,13 +55,13 @@ class _ReviewListState extends State<ReviewList> {
         type: widget.machineType,
         limit: 20,
       );
-      print('ReviewList fetchReviews - result count: ${result.length}');
+      debugPrint('ReviewList fetchReviews - result count: ${result.length}');
       setState(() {
         reviews = result;
         loading = false;
       });
     } catch (e) {
-      print('Error fetching reviews: $e');
+      debugPrint('Error fetching reviews: $e');
       setState(() {
         loading = false;
       });
@@ -70,7 +73,7 @@ class _ReviewListState extends State<ReviewList> {
     if (loading) {
       return const Center(child: CircularProgressIndicator());
     }
-    
+
     if (reviews.isEmpty) {
       return const Center(
         child: Text(

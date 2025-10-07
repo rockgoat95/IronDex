@@ -1,8 +1,9 @@
-
 import 'package:flutter/material.dart';
+
+import 'archive/archive_screen.dart';
+import 'planner_screen.dart';
 import 'reviews_screen.dart';
 import 'settings_screen.dart';
-import 'planner_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -17,6 +18,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _widgetOptions = <Widget>[
     const ReviewsScreen(),
     const PlannerScreen(),
+    const ArchiveScreen(),
     const SettingsScreen(),
   ];
 
@@ -29,22 +31,49 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
-      ),
+      body: Center(child: _widgetOptions.elementAt(_selectedIndex)),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        type: BottomNavigationBarType.fixed,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Colors.grey[500],
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '홈',
+            icon: ImageIcon(
+              const AssetImage('assets/icon/home.png'),
+              color: _selectedIndex == 0
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.grey[500],
+            ),
+            label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.playlist_add_check),
-            label: '플래너',
+            icon: ImageIcon(
+              const AssetImage('assets/icon/planner.png'),
+              color: _selectedIndex == 1
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.grey[500],
+            ),
+            label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: '사용자 설정',
+            icon: ImageIcon(
+              const AssetImage('assets/icon/archive.png'),
+              color: _selectedIndex == 2
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.grey[500],
+            ),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(
+              const AssetImage('assets/icon/more.png'),
+              color: _selectedIndex == 3
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.grey[500],
+            ),
+            label: '',
           ),
         ],
         currentIndex: _selectedIndex,

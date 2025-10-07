@@ -29,23 +29,25 @@ class MachineCard extends StatelessWidget {
           width: 160,
           height: 160,
           margin: const EdgeInsets.symmetric(horizontal: 1),
-          decoration: isSelected 
-            ? BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withOpacity(0.3),
-                    spreadRadius: 2,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              )
-            : null,
+          decoration: isSelected
+              ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withValues(alpha: 0.3),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                )
+              : null,
           child: Card(
             color: Colors.white,
             elevation: isSelected ? 4 : 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             clipBehavior: Clip.antiAlias,
             child: Stack(
               children: [
@@ -92,23 +94,29 @@ class MachineCard extends StatelessWidget {
           children: [
             SizedBox(
               width: 100,
-              child:Text(
+              child: Text(
                 brandName,
                 maxLines: 1,
                 textAlign: TextAlign.left,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
               ),
             ),
             SizedBox(
               width: 50,
-              child:Row(
+              child: Row(
                 children: [
                   const Icon(Icons.star, color: Colors.amber, size: 14),
                   SizedBox(width: 2),
                   Text(
                     score != null ? score!.toStringAsFixed(1) : '-',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
                   ),
                   SizedBox(width: 2),
                   Text(
@@ -137,7 +145,7 @@ class MachineCard extends StatelessWidget {
                 ),
               ),
             ),
-          ]
+          ],
         ),
       ],
     );

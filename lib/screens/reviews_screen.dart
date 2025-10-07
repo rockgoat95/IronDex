@@ -102,7 +102,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset('lib/logo/image.png', height: 32),
+            Image.asset('assets/logo/image.png', height: 32),
             const SizedBox(width: 8),
             const Text(
               'Iron Dex',

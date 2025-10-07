@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../constants/filter_constants.dart';
 
 class BodyPartChips extends StatelessWidget {
@@ -22,30 +23,33 @@ class BodyPartChips extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: FilterConstants.bodyParts.map((bodyPart) {
-                final isSelected = selectedBodyParts?.contains(bodyPart) ?? false;
-                
+                final isSelected =
+                    selectedBodyParts?.contains(bodyPart) ?? false;
+
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: Container(
-                    decoration: isSelected 
-                      ? BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withOpacity(0.4),
-                              spreadRadius: 2,
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        )
-                      : null,
+                    decoration: isSelected
+                        ? BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue.withValues(alpha: 0.4),
+                                spreadRadius: 2,
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          )
+                        : null,
                     child: FilterChip(
                       label: Text(bodyPart),
                       selected: isSelected,
                       onSelected: (selected) {
-                        List<String> newSelection = List.from(selectedBodyParts ?? []);
-                        
+                        List<String> newSelection = List.from(
+                          selectedBodyParts ?? [],
+                        );
+
                         if (selected) {
                           if (!newSelection.contains(bodyPart)) {
                             newSelection.add(bodyPart);
@@ -53,8 +57,10 @@ class BodyPartChips extends StatelessWidget {
                         } else {
                           newSelection.remove(bodyPart);
                         }
-                        
-                        onBodyPartsChanged(newSelection.isEmpty ? null : newSelection);
+
+                        onBodyPartsChanged(
+                          newSelection.isEmpty ? null : newSelection,
+                        );
                       },
                       selectedColor: Colors.white,
                       checkmarkColor: Colors.blue,

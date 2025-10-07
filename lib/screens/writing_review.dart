@@ -1,9 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+
 import '../widgets/writing_review/machine_search_widget.dart';
-import '../widgets/writing_review/rating_widget.dart';
 import '../widgets/writing_review/photo_upload_widget.dart';
+import '../widgets/writing_review/rating_widget.dart';
 
 class ReviewCreateScreen extends StatefulWidget {
   const ReviewCreateScreen({super.key});
@@ -16,7 +18,7 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
-  
+
   String? _selectedMachineId;
   String? _selectedMachineName;
   double _rating = 5.0;
@@ -63,7 +65,7 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
     });
   }
 
-  void _submitReview() {
+  Future<void> _submitReview() async {
     if (_formKey.currentState!.validate()) {
       // 머신이 선택되었는지 확인
       if (_selectedMachineId == null) {
@@ -81,20 +83,22 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
       });
 
       // TODO: 실제 리뷰 등록 로직
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _isSubmitting = false;
-        });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Review has been submitted!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
-        Navigator.pop(context);
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (!mounted) return;
+
+      setState(() {
+        _isSubmitting = false;
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Review has been submitted!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.of(context).pop();
     }
   }
 
@@ -119,24 +123,18 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
                 selectedMachineName: _selectedMachineName,
                 onMachineSelected: _onMachineSelected,
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Rating Widget
-              RatingWidget(
-                rating: _rating,
-                onRatingChanged: _onRatingChanged,
-              ),
-              
+              RatingWidget(rating: _rating, onRatingChanged: _onRatingChanged),
+
               const SizedBox(height: 24),
-              
+
               // Title
               const Text(
                 'Title',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -154,16 +152,13 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Content
               const Text(
                 'Content',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -186,24 +181,24 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Photo Upload Widget
               PhotoUploadWidget(
                 selectedImages: _selectedImages,
                 onPickImages: _pickImages,
                 onRemoveImage: _removeImage,
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Submit button
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submitReview,
+                  onPressed: _isSubmitting ? null : () => _submitReview(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
@@ -212,28 +207,30 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
                     ),
                   ),
                   child: _isSubmitting
-                    ? const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ? const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
                             ),
+                            SizedBox(width: 12),
+                            Text('Submitting...'),
+                          ],
+                        )
+                      : const Text(
+                          'Submit Review',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
-                          SizedBox(width: 12),
-                          Text('Submitting...'),
-                        ],
-                      )
-                    : const Text(
-                        'Submit Review',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
                         ),
-                      ),
                 ),
               ),
             ],
