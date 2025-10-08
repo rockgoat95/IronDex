@@ -26,3 +26,4 @@ flutter:
     - .env
     - assets/logo/
     - assets/icon/
+    - assets/auth/

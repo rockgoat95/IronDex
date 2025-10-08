@@ -14,6 +14,8 @@ class AuthProvider with ChangeNotifier {
   bool _isLoggedIn = Supabase.instance.client.auth.currentSession != null;
   bool get isLoggedIn => _isLoggedIn;
 
+  User? get currentUser => Supabase.instance.client.auth.currentUser;
+
   StreamSubscription<AuthState>? _authStateSubscription;
 
   void _updateAuthState(Session? session) {

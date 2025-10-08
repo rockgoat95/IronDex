@@ -28,29 +28,35 @@ class _AuthScreenState extends State<AuthScreen> {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ElevatedButton(
-                onPressed: () => _handleSignIn(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              InkWell(
+                onTap: () => _handleSignIn(
                   () => context.read<AuthProvider>().signInWithGoogle(),
                 ),
-                child: const Text('Google로 로그인'),
+                child: Image.asset(
+                  'assets/auth/google_login_icon.png',
+                  height: 52,
+                ),
               ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () => _handleSignIn(
+              InkWell(
+                onTap: () => _handleSignIn(
                   () => context.read<AuthProvider>().signInWithKakao(),
                 ),
-                child: const Text('Kakao로 로그인'),
+                child: Image.asset(
+                  'assets/auth/kakao_login_icon.png',
+                  height: 52,
+                ),
               ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () => _handleSignIn(
+              InkWell(
+                onTap: () => _handleSignIn(
                   () => context.read<AuthProvider>().signInWithNaver(),
                 ),
-                child: const Text('Naver로 로그인'),
+                child: Image.asset(
+                  'assets/auth/naver_login_icon.png',
+                  height: 52,
+                ),
               ),
             ],
           ),
