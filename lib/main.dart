@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:irondex/providers/auth_provider.dart';
+import 'package:irondex/providers/machine_favorite_provider.dart';
+import 'package:irondex/providers/review_like_provider.dart';
 import 'package:irondex/screens/auth/auth_screen.dart';
 import 'package:irondex/screens/main/main_screen.dart';
 import 'package:irondex/services/review_repository.dart';
@@ -30,6 +32,36 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         Provider(create: (_) => ReviewRepository()),
+        ChangeNotifierProxyProvider2<
+          AuthProvider,
+          ReviewRepository,
+          MachineFavoriteProvider
+        >(
+          create: (_) => MachineFavoriteProvider(),
+          update: (_, auth, repository, previous) {
+            final provider = previous ?? MachineFavoriteProvider();
+            provider.updateDependencies(
+              authProvider: auth,
+              repository: repository,
+            );
+            return provider;
+          },
+        ),
+        ChangeNotifierProxyProvider2<
+          AuthProvider,
+          ReviewRepository,
+          ReviewLikeProvider
+        >(
+          create: (_) => ReviewLikeProvider(),
+          update: (_, auth, repository, previous) {
+            final provider = previous ?? ReviewLikeProvider();
+            provider.updateDependencies(
+              authProvider: auth,
+              repository: repository,
+            );
+            return provider;
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'IronDex',

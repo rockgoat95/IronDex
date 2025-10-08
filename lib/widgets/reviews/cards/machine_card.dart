@@ -8,6 +8,8 @@ class MachineCard extends StatelessWidget {
   final double? score;
   final int? reviewCnt;
   final bool isSelected;
+  final bool isFavorite;
+  final VoidCallback? onFavoriteToggle;
 
   const MachineCard({
     super.key,
@@ -18,6 +20,8 @@ class MachineCard extends StatelessWidget {
     this.score,
     this.reviewCnt,
     this.isSelected = false,
+    this.isFavorite = false,
+    this.onFavoriteToggle,
   });
 
   @override
@@ -65,6 +69,27 @@ class MachineCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (onFavoriteToggle != null)
+                  Positioned(
+                    right: 8,
+                    bottom: 8,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: onFavoriteToggle,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                          color: Colors.black,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
                 Positioned(
                   left: 8,
                   top: 8,

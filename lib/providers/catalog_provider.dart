@@ -5,7 +5,6 @@ class CatalogProvider with ChangeNotifier {
   List<String>? _selectedBodyParts;
   String? _selectedMachineType;
   String? _selectedMachineId;
-
   String? get selectedBrandId => _selectedBrandId;
   List<String>? get selectedBodyParts => _selectedBodyParts;
   String? get selectedMachineType => _selectedMachineType;

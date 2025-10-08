@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:irondex/providers/machine_favorite_provider.dart';
 import 'package:irondex/services/review_repository.dart';
 import 'package:irondex/widgets/reviews/cards/machine_card.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ class MachineList extends StatefulWidget {
   final List<String>? bodyParts;
   final String? machineType;
   final String? selectedMachineId;
+  final String? searchQuery;
   final ValueChanged<String?>? onMachineSelected;
 
   const MachineList({
@@ -16,6 +18,7 @@ class MachineList extends StatefulWidget {
     this.bodyParts,
     this.machineType,
     this.selectedMachineId,
+    this.searchQuery,
     this.onMachineSelected,
   });
 
@@ -31,6 +34,10 @@ class _MachineListState extends State<MachineList> {
   void initState() {
     super.initState();
     fetch();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<MachineFavoriteProvider>().refreshFavorites();
+    });
   }
 
   @override
@@ -39,7 +46,8 @@ class _MachineListState extends State<MachineList> {
     if (oldWidget.brandId != widget.brandId ||
         oldWidget.bodyParts != widget.bodyParts ||
         oldWidget.machineType != widget.machineType ||
-        oldWidget.selectedMachineId != widget.selectedMachineId) {
+        oldWidget.selectedMachineId != widget.selectedMachineId ||
+        oldWidget.searchQuery != widget.searchQuery) {
       fetch();
     }
   }
@@ -55,6 +63,7 @@ class _MachineListState extends State<MachineList> {
       brandId: widget.brandId,
       bodyParts: widget.bodyParts,
       machineType: widget.machineType,
+      searchQuery: widget.searchQuery,
     );
 
     if (!mounted) {
@@ -69,6 +78,8 @@ class _MachineListState extends State<MachineList> {
 
   @override
   Widget build(BuildContext context) {
+    final favoritesProvider = context.watch<MachineFavoriteProvider>();
+
     if (loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -92,6 +103,7 @@ class _MachineListState extends State<MachineList> {
           final brand = m['brand'] ?? {};
           final machineId = m['id']?.toString();
           final isSelected = widget.selectedMachineId == machineId;
+          final isFavorite = favoritesProvider.isFavorite(machineId);
 
           return GestureDetector(
             onTap: () {
@@ -107,6 +119,24 @@ class _MachineListState extends State<MachineList> {
                   : null,
               reviewCnt: m['review_cnt'] is int ? m['review_cnt'] as int : 0,
               isSelected: isSelected,
+              isFavorite: isFavorite,
+              onFavoriteToggle: machineId == null
+                  ? null
+                  : () async {
+                      try {
+                        await favoritesProvider.toggleFavorite(machineId);
+                      } on StateError {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('로그인 후 이용해주세요.')),
+                        );
+                      } catch (error) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('찜 처리 중 오류가 발생했습니다.')),
+                        );
+                      }
+                    },
             ),
           );
         },

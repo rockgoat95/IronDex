@@ -10,6 +10,7 @@ class ReviewRepository {
     String? brandId,
     List<String>? bodyParts,
     String? machineType,
+    String? searchQuery,
     required String selectClause,
   }) {
     var query = _client
@@ -29,6 +30,16 @@ class ReviewRepository {
       query = query.eq('type', machineType);
     }
 
+    final trimmedQuery = searchQuery?.trim();
+    if (trimmedQuery != null && trimmedQuery.isNotEmpty) {
+      final escaped = trimmedQuery
+          .replaceAll('\\', '\\\\')
+          .replaceAll('%', '\\%')
+          .replaceAll('_', '\\_');
+      final pattern = '%$escaped%';
+      query = query.or('name.ilike.$pattern,brand.name.ilike.$pattern');
+    }
+
     return query;
   }
 
@@ -41,11 +52,13 @@ class ReviewRepository {
     String? brandId,
     List<String>? bodyParts,
     String? machineType,
+    String? searchQuery,
   }) async {
     final query = _buildMachineQuery(
       brandId: brandId,
       bodyParts: bodyParts,
       machineType: machineType,
+      searchQuery: searchQuery,
       selectClause: '''
         id,
         name,
@@ -124,5 +137,85 @@ class ReviewRepository {
         .range(offset, offset + limit - 1);
 
     return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<Set<String>> fetchLikedReviewIds() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      return <String>{};
+    }
+
+    final response = await _client
+        .from('machine_review_likes')
+        .select('machine_review_id')
+        .eq('user_id', userId);
+
+    return response
+        .map<String>((row) => row['machine_review_id'].toString())
+        .toSet();
+  }
+
+  Future<void> addReviewLike(String reviewId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    await _client.from('machine_review_likes').upsert({
+      'user_id': userId,
+      'machine_review_id': reviewId,
+    }, onConflict: 'user_id,machine_review_id');
+  }
+
+  Future<void> removeReviewLike(String reviewId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    await _client
+        .from('machine_review_likes')
+        .delete()
+        .eq('user_id', userId)
+        .eq('machine_review_id', reviewId);
+  }
+
+  Future<Set<String>> fetchFavoriteMachineIds() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      return <String>{};
+    }
+
+    final response = await _client
+        .from('machine_favorites')
+        .select('machine_id')
+        .eq('user_id', userId);
+
+    return response.map<String>((row) => row['machine_id'].toString()).toSet();
+  }
+
+  Future<void> addFavoriteMachine(String machineId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    await _client.from('machine_favorites').upsert({
+      'user_id': userId,
+      'machine_id': machineId,
+    }, onConflict: 'user_id,machine_id');
+  }
+
+  Future<void> removeFavoriteMachine(String machineId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    await _client
+        .from('machine_favorites')
+        .delete()
+        .eq('user_id', userId)
+        .eq('machine_id', machineId);
   }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:irondex/providers/review_like_provider.dart';
+import 'package:provider/provider.dart';
 
 class ReviewCard extends StatefulWidget {
   final Map<String, dynamic> review;
@@ -18,15 +20,59 @@ class _ReviewCardState extends State<ReviewCard> {
     likeCount = widget.review['like_count'] ?? 0;
   }
 
+  @override
+  void didUpdateWidget(covariant ReviewCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.review['id'] != widget.review['id'] ||
+        oldWidget.review['like_count'] != widget.review['like_count']) {
+      setState(() {
+        likeCount = widget.review['like_count'] ?? 0;
+      });
+    }
+  }
+
   void _onLikePressed() {
-    setState(() {
-      likeCount++;
-    });
-    // TODO: Supabase에 좋아요 업데이트 API 호출
+    final reviewId = widget.review['id']?.toString();
+    if (reviewId == null) {
+      return;
+    }
+
+    final likeProvider = context.read<ReviewLikeProvider>();
+
+    likeProvider
+        .toggleLike(reviewId)
+        .then((isLikedNow) {
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            likeCount = isLikedNow
+                ? likeCount + 1
+                : (likeCount > 0 ? likeCount - 1 : 0);
+          });
+        })
+        .onError((error, stackTrace) {
+          if (!mounted) {
+            return;
+          }
+          final messenger = ScaffoldMessenger.of(context);
+          final message =
+              error is StateError && error.message == 'USER_NOT_LOGGED_IN'
+              ? '로그인 후 좋아요를 사용할 수 있습니다.'
+              : '좋아요 처리 중 오류가 발생했습니다.';
+          messenger.showSnackBar(SnackBar(content: Text(message)));
+        });
   }
 
   @override
   Widget build(BuildContext context) {
+    final reviewId = widget.review['id']?.toString();
+    final isLiked = context.select<ReviewLikeProvider, bool>((provider) {
+      if (reviewId == null) {
+        return false;
+      }
+      return provider.isLiked(reviewId);
+    });
     final machine = widget.review['machine'] ?? {};
     final brand = machine['brand'] ?? {};
     final user = widget.review['user'] ?? {};
@@ -127,7 +173,10 @@ class _ReviewCardState extends State<ReviewCard> {
                       children: [
                         IconButton(
                           onPressed: _onLikePressed,
-                          icon: const Icon(Icons.favorite_border),
+                          icon: Icon(
+                            isLiked ? Icons.favorite : Icons.favorite_border,
+                            color: isLiked ? Colors.redAccent : Colors.black54,
+                          ),
                           iconSize: 20,
                         ),
                         Text(
