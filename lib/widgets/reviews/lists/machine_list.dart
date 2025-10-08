@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-
-import '../../supabase/fetcher.dart';
-import 'machine_card.dart';
+import 'package:irondex/services/review_repository.dart';
+import 'package:irondex/widgets/reviews/cards/machine_card.dart';
+import 'package:provider/provider.dart';
 
 class MachineList extends StatefulWidget {
   final String? brandId;
   final List<String>? bodyParts;
   final String? machineType;
   final String? selectedMachineId;
-  final Function(String?)? onMachineSelected;
+  final ValueChanged<String?>? onMachineSelected;
 
   const MachineList({
     super.key,
@@ -36,7 +36,6 @@ class _MachineListState extends State<MachineList> {
   @override
   void didUpdateWidget(MachineList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 필터가 변경되면 다시 가져오기
     if (oldWidget.brandId != widget.brandId ||
         oldWidget.bodyParts != widget.bodyParts ||
         oldWidget.machineType != widget.machineType ||
@@ -50,11 +49,17 @@ class _MachineListState extends State<MachineList> {
       loading = true;
     });
 
-    final result = await fetchMachines(
+    final repository = context.read<ReviewRepository>();
+
+    final result = await repository.fetchMachines(
       brandId: widget.brandId,
       bodyParts: widget.bodyParts,
       machineType: widget.machineType,
     );
+
+    if (!mounted) {
+      return;
+    }
 
     setState(() {
       machines = result;
@@ -90,7 +95,6 @@ class _MachineListState extends State<MachineList> {
 
           return GestureDetector(
             onTap: () {
-              // 같은 머신 클릭시 선택 해제, 다른 머신 클릭시 선택
               widget.onMachineSelected?.call(isSelected ? null : machineId);
             },
             child: MachineCard(

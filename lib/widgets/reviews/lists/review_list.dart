@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-
-import '../../supabase/fetcher.dart';
-import 'review_card.dart';
+import 'package:irondex/services/review_repository.dart';
+import 'package:irondex/widgets/reviews/cards/review_card.dart';
+import 'package:provider/provider.dart';
 
 class ReviewList extends StatefulWidget {
   final String? brandId;
   final List<String>? bodyParts;
   final String? machineType;
-  final String? selectedMachineId; // 특정 머신 선택시
+  final String? selectedMachineId;
 
   const ReviewList({
     super.key,
@@ -34,7 +34,6 @@ class _ReviewListState extends State<ReviewList> {
   @override
   void didUpdateWidget(ReviewList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 필터가 변경되면 다시 가져오기
     if (oldWidget.brandId != widget.brandId ||
         oldWidget.bodyParts != widget.bodyParts ||
         oldWidget.machineType != widget.machineType ||
@@ -48,7 +47,9 @@ class _ReviewListState extends State<ReviewList> {
       debugPrint(
         'ReviewList fetchReviews - brandId: ${widget.brandId}, bodyParts: ${widget.bodyParts}, machineId: ${widget.selectedMachineId}',
       );
-      final result = await fetchMachineReviews(
+      final repository = context.read<ReviewRepository>();
+
+      final result = await repository.fetchMachineReviews(
         brandId: widget.brandId,
         machineId: widget.selectedMachineId,
         bodyParts: widget.bodyParts,
@@ -56,12 +57,20 @@ class _ReviewListState extends State<ReviewList> {
         limit: 20,
       );
       debugPrint('ReviewList fetchReviews - result count: ${result.length}');
+
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
         reviews = result;
         loading = false;
       });
     } catch (e) {
       debugPrint('Error fetching reviews: $e');
+      if (!mounted) {
+        return;
+      }
       setState(() {
         loading = false;
       });

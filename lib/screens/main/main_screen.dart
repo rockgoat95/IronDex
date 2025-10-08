@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-
-import 'archive/archive_screen.dart';
-import 'planner_screen.dart';
-import 'reviews_screen.dart';
-import 'settings_screen.dart';
+import 'package:irondex/screens/archive/archive_screen.dart';
+import 'package:irondex/screens/planner/planner_screen.dart';
+import 'package:irondex/screens/reviews/reviews_screen.dart';
+import 'package:irondex/screens/settings/settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,7 +14,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _widgetOptions = <Widget>[
+  late final List<Widget> _pages = [
     const ReviewsScreen(),
     const PlannerScreen(),
     const ArchiveScreen(),
@@ -31,7 +30,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: _widgetOptions.elementAt(_selectedIndex)),
+      body: Center(child: _pages.elementAt(_selectedIndex)),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         showSelectedLabels: false,

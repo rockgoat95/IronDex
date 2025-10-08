@@ -25,7 +25,6 @@ class BrandItem extends StatelessWidget {
             : 52;
         final double cardSize = maxWidth >= 52 ? 52 : maxWidth;
 
-        // '+' or '-' button case
         if (isPlusButton) {
           return Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -51,7 +50,7 @@ class BrandItem extends StatelessWidget {
                 child: SizedBox(
                   width: cardSize,
                   child: Text(
-                    name, // '더보기' or '접기'
+                    name,
                     style: const TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
@@ -66,7 +65,6 @@ class BrandItem extends StatelessWidget {
           );
         }
 
-        // Normal brand item case
         return Column(
           mainAxisAlignment: MainAxisAlignment.start,
           mainAxisSize: MainAxisSize.max,

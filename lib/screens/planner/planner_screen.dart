@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class PlannerScreen extends StatelessWidget {
@@ -6,10 +5,6 @@ class PlannerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Planner Screen'),
-      ),
-    );
+    return const Scaffold(body: Center(child: Text('Planner Screen')));
   }
 }

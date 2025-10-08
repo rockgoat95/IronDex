@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-
-import '../../constants/filter_constants.dart';
+import 'package:irondex/constants/filter_constants.dart';
 
 class BodyPartChips extends StatelessWidget {
   final List<String>? selectedBodyParts;
-  final Function(List<String>?) onBodyPartsChanged;
+  final ValueChanged<List<String>?> onBodyPartsChanged;
 
   const BodyPartChips({
     super.key,
@@ -18,7 +17,6 @@ class BodyPartChips extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
       child: Column(
         children: [
-          // 부위 칩들
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -46,7 +44,7 @@ class BodyPartChips extends StatelessWidget {
                       label: Text(bodyPart),
                       selected: isSelected,
                       onSelected: (selected) {
-                        List<String> newSelection = List.from(
+                        final newSelection = List<String>.from(
                           selectedBodyParts ?? [],
                         );
 

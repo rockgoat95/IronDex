@@ -110,7 +110,7 @@ class MachineCard extends StatelessWidget {
               child: Row(
                 children: [
                   const Icon(Icons.star, color: Colors.amber, size: 14),
-                  SizedBox(width: 2),
+                  const SizedBox(width: 2),
                   Text(
                     score != null ? score!.toStringAsFixed(1) : '-',
                     style: const TextStyle(
@@ -118,7 +118,7 @@ class MachineCard extends StatelessWidget {
                       fontSize: 10,
                     ),
                   ),
-                  SizedBox(width: 2),
+                  const SizedBox(width: 2),
                   Text(
                     '(${reviewCnt ?? 0})',
                     style: const TextStyle(fontSize: 9, color: Colors.grey),
@@ -130,7 +130,7 @@ class MachineCard extends StatelessWidget {
         ),
         Row(
           children: [
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             SizedBox(
               width: 160,
               child: Text(

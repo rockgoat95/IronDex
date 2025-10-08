@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class ReviewCard extends StatefulWidget {
   final Map<String, dynamic> review;
-  
+
   const ReviewCard({super.key, required this.review});
 
   @override
@@ -30,7 +30,7 @@ class _ReviewCardState extends State<ReviewCard> {
     final machine = widget.review['machine'] ?? {};
     final brand = machine['brand'] ?? {};
     final user = widget.review['user'] ?? {};
-    
+
     return Container(
       width: double.infinity,
       height: 160,
@@ -43,7 +43,6 @@ class _ReviewCardState extends State<ReviewCard> {
           padding: const EdgeInsets.all(12.0),
           child: Row(
             children: [
-              // 왼쪽: 머신 이미지
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.network(
@@ -60,12 +59,10 @@ class _ReviewCardState extends State<ReviewCard> {
                 ),
               ),
               const SizedBox(width: 12),
-              // 오른쪽: 리뷰 정보
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 머신 이름 + 브랜드
                     Row(
                       children: [
                         Expanded(
@@ -86,12 +83,12 @@ class _ReviewCardState extends State<ReviewCard> {
                             width: 24,
                             height: 24,
                             fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => Container(),
+                            errorBuilder: (context, error, stackTrace) =>
+                                const SizedBox.shrink(),
                           ),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    // 사용자 이름 + 평점
                     Row(
                       children: [
                         Text(
@@ -116,7 +113,6 @@ class _ReviewCardState extends State<ReviewCard> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    // 리뷰 내용
                     Expanded(
                       child: Text(
                         widget.review['comment'] ?? '',
@@ -126,7 +122,6 @@ class _ReviewCardState extends State<ReviewCard> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // 좋아요 버튼
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [

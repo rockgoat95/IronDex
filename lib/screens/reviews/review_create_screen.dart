@@ -2,10 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
-import '../widgets/writing_review/machine_search_widget.dart';
-import '../widgets/writing_review/photo_upload_widget.dart';
-import '../widgets/writing_review/rating_widget.dart';
+import 'package:irondex/widgets/writing_review/machine_search_widget.dart';
+import 'package:irondex/widgets/writing_review/photo_upload_widget.dart';
+import 'package:irondex/widgets/writing_review/rating_widget.dart';
 
 class ReviewCreateScreen extends StatefulWidget {
   const ReviewCreateScreen({super.key});
@@ -33,7 +32,6 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
     super.dispose();
   }
 
-  // 머신 선택 콜백
   void _onMachineSelected(String machineId, String machineName) {
     setState(() {
       _selectedMachineId = machineId;
@@ -41,14 +39,12 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
     });
   }
 
-  // 평점 변경 콜백
   void _onRatingChanged(double rating) {
     setState(() {
       _rating = rating;
     });
   }
 
-  // 이미지 선택 함수
   Future<void> _pickImages() async {
     final List<XFile> images = await _picker.pickMultiImage();
     if (images.isNotEmpty) {
@@ -58,7 +54,6 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
     }
   }
 
-  // 이미지 제거 함수
   void _removeImage(int index) {
     setState(() {
       _selectedImages.removeAt(index);
@@ -67,7 +62,6 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
 
   Future<void> _submitReview() async {
     if (_formKey.currentState!.validate()) {
-      // 머신이 선택되었는지 확인
       if (_selectedMachineId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -82,7 +76,6 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
         _isSubmitting = true;
       });
 
-      // TODO: 실제 리뷰 등록 로직
       await Future.delayed(const Duration(seconds: 2));
 
       if (!mounted) return;
@@ -118,20 +111,13 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Machine Selection Widget
               MachineSearchWidget(
                 selectedMachineName: _selectedMachineName,
                 onMachineSelected: _onMachineSelected,
               ),
-
               const SizedBox(height: 24),
-
-              // Rating Widget
               RatingWidget(rating: _rating, onRatingChanged: _onRatingChanged),
-
               const SizedBox(height: 24),
-
-              // Title
               const Text(
                 'Title',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -152,10 +138,7 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
                   return null;
                 },
               ),
-
               const SizedBox(height: 24),
-
-              // Content
               const Text(
                 'Content',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -181,24 +164,18 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
                   return null;
                 },
               ),
-
               const SizedBox(height: 24),
-
-              // Photo Upload Widget
               PhotoUploadWidget(
                 selectedImages: _selectedImages,
                 onPickImages: _pickImages,
                 onRemoveImage: _removeImage,
               ),
-
               const SizedBox(height: 32),
-
-              // Submit button
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : () => _submitReview(),
+                  onPressed: _isSubmitting ? null : _submitReview,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,

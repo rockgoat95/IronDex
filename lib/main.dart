@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:irondex/providers/auth_provider.dart';
+import 'package:irondex/screens/auth/auth_screen.dart';
+import 'package:irondex/screens/main/main_screen.dart';
+import 'package:irondex/services/review_repository.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'providers/auth_provider.dart';
-import 'screens/auth_screen.dart';
-import 'screens/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,8 +26,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        Provider(create: (_) => ReviewRepository()),
+      ],
       child: MaterialApp(
         title: 'IronDex',
         theme: ThemeData(

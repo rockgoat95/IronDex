@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:irondex/services/review_repository.dart';
+import 'package:irondex/widgets/reviews/components/brand_item.dart';
+import 'package:provider/provider.dart';
 
-import '../../supabase/fetcher.dart';
-import 'brand_item.dart';
-
-class BrandGrid extends StatefulWidget {
+class BrandFilterGrid extends StatefulWidget {
   final String? selectedBrandId;
-  final Function(String?) onBrandSelected;
+  final ValueChanged<String?> onBrandSelected;
 
-  const BrandGrid({
+  const BrandFilterGrid({
     super.key,
     this.selectedBrandId,
     required this.onBrandSelected,
   });
 
   @override
-  State<BrandGrid> createState() => _BrandGridState();
+  State<BrandFilterGrid> createState() => _BrandFilterGridState();
 }
 
-class _BrandGridState extends State<BrandGrid> {
+class _BrandFilterGridState extends State<BrandFilterGrid> {
   late Future<List<Map<String, dynamic>>> _brandsFuture;
   bool _isExpanded = false;
   final ScrollController _scrollController = ScrollController();
@@ -31,7 +31,7 @@ class _BrandGridState extends State<BrandGrid> {
   @override
   void initState() {
     super.initState();
-    _brandsFuture = fetchBrands();
+    _brandsFuture = context.read<ReviewRepository>().fetchBrands();
   }
 
   @override

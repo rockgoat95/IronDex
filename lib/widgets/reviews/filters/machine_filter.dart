@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../constants/filter_constants.dart';
+import 'package:irondex/constants/filter_constants.dart';
 
 class MachineFilter extends StatefulWidget {
-  final Function(List<String>?, List<String>?, String?) onFilterChanged;
-  
+  final void Function(List<String>?, String?) onFilterChanged;
+
   const MachineFilter({super.key, required this.onFilterChanged});
 
   @override
@@ -12,29 +12,15 @@ class MachineFilter extends StatefulWidget {
 
 class _MachineFilterState extends State<MachineFilter> {
   List<String> selectedBodyParts = [];
-  List<String> selectedMovements = [];
   String? selectedType;
-
-  // 선택된 부위에 따른 움직임 리스트 반환
-  List<String> get availableMovements {
-    if (selectedBodyParts.isEmpty) {
-      return FilterConstants.allMovements;
-    }
-    
-    Set<String> movements = {};
-    for (String bodyPart in selectedBodyParts) {
-      movements.addAll(FilterConstants.bodyPartMovements[bodyPart] ?? []);
-    }
-    return movements.toList()..sort();
-  }
 
   Widget _buildFilterSection(
     String title,
     List<String> options,
     List<String> selectedValues,
-    Function(String) onTap,
-    {required bool isMultiSelect}
-  ) {
+    ValueChanged<String> onTap, {
+    required bool isMultiSelect,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -51,7 +37,7 @@ class _MachineFilterState extends State<MachineFilter> {
             return FilterChip(
               label: Text(option),
               selected: isSelected,
-              onSelected: (selected) => onTap(option),
+              onSelected: (_) => onTap(option),
               selectedColor: Colors.blue.shade100,
               checkmarkColor: Colors.blue,
             );
@@ -68,7 +54,6 @@ class _MachineFilterState extends State<MachineFilter> {
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
       child: Column(
         children: [
-          // 헤더 (고정)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -83,14 +68,11 @@ class _MachineFilterState extends State<MachineFilter> {
             ],
           ),
           const SizedBox(height: 20),
-          
-          // 스크롤 가능한 콘텐츠 영역
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Body Parts 섹션
                   _buildFilterSection(
                     '부위',
                     FilterConstants.bodyParts,
@@ -102,37 +84,11 @@ class _MachineFilterState extends State<MachineFilter> {
                         } else {
                           selectedBodyParts.add(value);
                         }
-                        // 부위 변경시 관련없는 움직임 제거
-                        selectedMovements.removeWhere((movement) => 
-                          !availableMovements.contains(movement));
                       });
                     },
                     isMultiSelect: true,
                   ),
-                  
                   const SizedBox(height: 20),
-                  
-                  // Movements 섹션 - 부위가 선택된 경우에만 표시
-                  if (selectedBodyParts.isNotEmpty) ...[
-                    _buildFilterSection(
-                      '동작',
-                      availableMovements,
-                      selectedMovements,
-                      (value) {
-                        setState(() {
-                          if (selectedMovements.contains(value)) {
-                            selectedMovements.remove(value);
-                          } else {
-                            selectedMovements.add(value);
-                          }
-                        });
-                      },
-                      isMultiSelect: true,
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                  
-                  // Type 섹션
                   _buildFilterSection(
                     '머신 타입',
                     FilterConstants.machineTypes,
@@ -144,15 +100,11 @@ class _MachineFilterState extends State<MachineFilter> {
                     },
                     isMultiSelect: false,
                   ),
-                  
-                  // 하단 여백
                   const SizedBox(height: 20),
                 ],
               ),
             ),
           ),
-          
-          // 하단 버튼들 (고정)
           Row(
             children: [
               Expanded(
@@ -160,7 +112,6 @@ class _MachineFilterState extends State<MachineFilter> {
                   onPressed: () {
                     setState(() {
                       selectedBodyParts.clear();
-                      selectedMovements.clear();
                       selectedType = null;
                     });
                   },
@@ -173,7 +124,6 @@ class _MachineFilterState extends State<MachineFilter> {
                   onPressed: () {
                     widget.onFilterChanged(
                       selectedBodyParts.isNotEmpty ? selectedBodyParts : null,
-                      selectedMovements.isNotEmpty ? selectedMovements : null,
                       selectedType,
                     );
                     Navigator.pop(context);
