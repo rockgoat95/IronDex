@@ -25,13 +25,18 @@ class MachineList extends StatefulWidget {
 }
 
 class _MachineListState extends State<MachineList> {
-  List<Map<String, dynamic>> machines = [];
-  bool loading = true;
+  static const int _pageSize = 10;
+
+  List<Map<String, dynamic>> _machines = [];
+  bool _isInitialLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  int _offset = 0;
 
   @override
   void initState() {
     super.initState();
-    fetch();
+    _loadMachines(reset: true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<MachineFavoriteProvider>().refreshFavorites();
@@ -45,43 +50,78 @@ class _MachineListState extends State<MachineList> {
         oldWidget.bodyParts != widget.bodyParts ||
         oldWidget.machineType != widget.machineType ||
         oldWidget.searchQuery != widget.searchQuery) {
-      fetch();
+      _loadMachines(reset: true);
     }
   }
 
-  Future<void> fetch() async {
-    setState(() {
-      loading = true;
-    });
+  Future<void> _loadMachines({bool reset = false}) async {
+    if (reset) {
+      setState(() {
+        _isInitialLoading = true;
+        _isLoadingMore = false;
+        _hasMore = true;
+        _offset = 0;
+        _machines = [];
+      });
+    } else {
+      if (!_hasMore || _isLoadingMore) {
+        return;
+      }
+      setState(() {
+        _isLoadingMore = true;
+      });
+    }
 
     final repository = context.read<ReviewRepository>();
 
-    final result = await repository.fetchMachines(
-      brandId: widget.brandId,
-      bodyParts: widget.bodyParts,
-      machineType: widget.machineType,
-      searchQuery: widget.searchQuery,
-    );
+    try {
+      final result = await repository.fetchMachines(
+        brandId: widget.brandId,
+        bodyParts: widget.bodyParts,
+        machineType: widget.machineType,
+        searchQuery: widget.searchQuery,
+        offset: _offset,
+        limit: _pageSize,
+      );
 
-    if (!mounted) {
-      return;
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        if (reset) {
+          _machines = List<Map<String, dynamic>>.from(result);
+        } else {
+          _machines = List<Map<String, dynamic>>.from(_machines)
+            ..addAll(result);
+        }
+        _offset += result.length;
+        _hasMore = result.length == _pageSize;
+        _isInitialLoading = false;
+        _isLoadingMore = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isInitialLoading = false;
+        _isLoadingMore = false;
+        _hasMore = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('머신 목록을 불러오는 중 오류가 발생했습니다.')),
+      );
     }
-
-    setState(() {
-      machines = result;
-      loading = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final favoritesProvider = context.watch<MachineFavoriteProvider>();
 
-    if (loading) {
+    if (_isInitialLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (machines.isEmpty) {
+    if (_machines.isEmpty) {
       return const Center(
         child: Text(
           'Machines are not found.',
@@ -90,56 +130,81 @@ class _MachineListState extends State<MachineList> {
       );
     }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: machines.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
-        childAspectRatio: 0.78,
-      ),
-      itemBuilder: (context, index) {
-        final m = machines[index];
-        final brand = m['brand'] ?? {};
-        final machineId = m['id']?.toString();
-        final isFavorite = favoritesProvider.isFavorite(machineId);
-
-        return GestureDetector(
-          onTap: () {
-            widget.onMachineTap?.call(m);
-          },
-          child: MachineCard(
-            name: m['name'] ?? '',
-            imageUrl: m['image_url'] ?? '',
-            brandName: brand['name'] ?? '',
-            brandLogoUrl: brand['logo_url'] ?? '',
-            score: m['score'] != null
-                ? double.tryParse(m['score'].toString())
-                : null,
-            reviewCnt: m['review_cnt'] is int ? m['review_cnt'] as int : 0,
-            isFavorite: isFavorite,
-            onFavoriteToggle: machineId == null
-                ? null
-                : () async {
-                    try {
-                      await favoritesProvider.toggleFavorite(machineId);
-                    } on StateError {
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('로그인 후 이용해주세요.')),
-                      );
-                    } catch (error) {
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('찜 처리 중 오류가 발생했습니다.')),
-                      );
-                    }
-                  },
-          ),
-        );
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.pixels >=
+                notification.metrics.maxScrollExtent - 200 &&
+            _hasMore &&
+            !_isLoadingMore &&
+            !_isInitialLoading) {
+          _loadMachines();
+        }
+        return false;
       },
+      child: Column(
+        children: [
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _machines.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 0.78,
+            ),
+            itemBuilder: (context, index) {
+              final m = _machines[index];
+              final brand = m['brand'] ?? {};
+              final machineId = m['id']?.toString();
+              final isFavorite = favoritesProvider.isFavorite(machineId);
+
+              return GestureDetector(
+                onTap: () {
+                  widget.onMachineTap?.call(m);
+                },
+                child: MachineCard(
+                  name: m['name'] ?? '',
+                  imageUrl: m['image_url'] ?? '',
+                  brandName: brand['name'] ?? '',
+                  brandLogoUrl: brand['logo_url'] ?? '',
+                  score: m['score'] != null
+                      ? double.tryParse(m['score'].toString())
+                      : null,
+                  reviewCnt: m['review_cnt'] is int
+                      ? m['review_cnt'] as int
+                      : 0,
+                  isFavorite: isFavorite,
+                  onFavoriteToggle: machineId == null
+                      ? null
+                      : () async {
+                          try {
+                            await favoritesProvider.toggleFavorite(machineId);
+                          } on StateError {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('로그인 후 이용해주세요.')),
+                            );
+                          } catch (error) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('찜 처리 중 오류가 발생했습니다.'),
+                              ),
+                            );
+                          }
+                        },
+                ),
+              );
+            },
+          ),
+          if (_isLoadingMore)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: CircularProgressIndicator(),
+            ),
+        ],
+      ),
     );
   }
 }

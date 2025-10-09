@@ -53,6 +53,8 @@ class ReviewRepository {
     List<String>? bodyParts,
     String? machineType,
     String? searchQuery,
+    int offset = 0,
+    int limit = 20,
   }) async {
     final query = _buildMachineQuery(
       brandId: brandId,
@@ -75,7 +77,7 @@ class ReviewRepository {
       ''',
     );
 
-    final response = await query;
+    final response = await query.range(offset, offset + limit - 1);
     return List<Map<String, dynamic>>.from(response);
   }
 

@@ -5,6 +5,7 @@ import 'package:irondex/providers/machine_favorite_provider.dart';
 import 'package:irondex/providers/review_like_provider.dart';
 import 'package:irondex/screens/auth/auth_screen.dart';
 import 'package:irondex/screens/main/main_screen.dart';
+import 'package:irondex/screens/splash/splash_screen.dart';
 import 'package:irondex/services/review_repository.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -68,14 +69,16 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         ),
-        home: const _AuthGate(),
+        home: const SplashScreen(buildNext: AuthGate.builder),
       ),
     );
   }
 }
 
-class _AuthGate extends StatelessWidget {
-  const _AuthGate();
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  static Widget builder(BuildContext context) => const AuthGate();
 
   @override
   Widget build(BuildContext context) {

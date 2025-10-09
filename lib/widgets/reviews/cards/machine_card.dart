@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class MachineCard extends StatelessWidget {
@@ -50,10 +51,15 @@ class MachineCard extends StatelessWidget {
                     child: Container(
                       color: Colors.white,
                       alignment: Alignment.center,
-                      child: Image.network(
-                        imageUrl,
+                      child: CachedNetworkImage(
+                        imageUrl: imageUrl,
                         fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) => Container(
+                        placeholder: (context, url) => const SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        errorWidget: (context, url, error) => Container(
                           color: Colors.grey[300],
                           child: const Icon(Icons.broken_image, size: 48),
                         ),
@@ -65,12 +71,17 @@ class MachineCard extends StatelessWidget {
                     left: 10,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        brandLogoUrl,
+                      child: CachedNetworkImage(
+                        imageUrl: brandLogoUrl,
                         width: 32,
                         height: 32,
                         fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) => Container(
+                        placeholder: (context, url) => Container(
+                          width: 32,
+                          height: 32,
+                          color: Colors.grey[200],
+                        ),
+                        errorWidget: (context, url, error) => Container(
                           width: 32,
                           height: 32,
                           color: Colors.grey[300],
