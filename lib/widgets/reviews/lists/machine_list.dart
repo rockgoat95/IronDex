@@ -8,18 +8,16 @@ class MachineList extends StatefulWidget {
   final String? brandId;
   final List<String>? bodyParts;
   final String? machineType;
-  final String? selectedMachineId;
   final String? searchQuery;
-  final ValueChanged<String?>? onMachineSelected;
+  final ValueChanged<Map<String, dynamic>>? onMachineTap;
 
   const MachineList({
     super.key,
     this.brandId,
     this.bodyParts,
     this.machineType,
-    this.selectedMachineId,
     this.searchQuery,
-    this.onMachineSelected,
+    this.onMachineTap,
   });
 
   @override
@@ -46,7 +44,6 @@ class _MachineListState extends State<MachineList> {
     if (oldWidget.brandId != widget.brandId ||
         oldWidget.bodyParts != widget.bodyParts ||
         oldWidget.machineType != widget.machineType ||
-        oldWidget.selectedMachineId != widget.selectedMachineId ||
         oldWidget.searchQuery != widget.searchQuery) {
       fetch();
     }
@@ -93,54 +90,56 @@ class _MachineListState extends State<MachineList> {
       );
     }
 
-    return SizedBox(
-      height: 200,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: machines.length,
-        itemBuilder: (context, index) {
-          final m = machines[index];
-          final brand = m['brand'] ?? {};
-          final machineId = m['id']?.toString();
-          final isSelected = widget.selectedMachineId == machineId;
-          final isFavorite = favoritesProvider.isFavorite(machineId);
-
-          return GestureDetector(
-            onTap: () {
-              widget.onMachineSelected?.call(isSelected ? null : machineId);
-            },
-            child: MachineCard(
-              name: m['name'] ?? '',
-              imageUrl: m['image_url'] ?? '',
-              brandName: brand['name'] ?? '',
-              brandLogoUrl: brand['logo_url'] ?? '',
-              score: m['score'] != null
-                  ? double.tryParse(m['score'].toString())
-                  : null,
-              reviewCnt: m['review_cnt'] is int ? m['review_cnt'] as int : 0,
-              isSelected: isSelected,
-              isFavorite: isFavorite,
-              onFavoriteToggle: machineId == null
-                  ? null
-                  : () async {
-                      try {
-                        await favoritesProvider.toggleFavorite(machineId);
-                      } on StateError {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('로그인 후 이용해주세요.')),
-                        );
-                      } catch (error) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('찜 처리 중 오류가 발생했습니다.')),
-                        );
-                      }
-                    },
-            ),
-          );
-        },
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: machines.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        childAspectRatio: 0.78,
       ),
+      itemBuilder: (context, index) {
+        final m = machines[index];
+        final brand = m['brand'] ?? {};
+        final machineId = m['id']?.toString();
+        final isFavorite = favoritesProvider.isFavorite(machineId);
+
+        return GestureDetector(
+          onTap: () {
+            widget.onMachineTap?.call(m);
+          },
+          child: MachineCard(
+            name: m['name'] ?? '',
+            imageUrl: m['image_url'] ?? '',
+            brandName: brand['name'] ?? '',
+            brandLogoUrl: brand['logo_url'] ?? '',
+            score: m['score'] != null
+                ? double.tryParse(m['score'].toString())
+                : null,
+            reviewCnt: m['review_cnt'] is int ? m['review_cnt'] as int : 0,
+            isFavorite: isFavorite,
+            onFavoriteToggle: machineId == null
+                ? null
+                : () async {
+                    try {
+                      await favoritesProvider.toggleFavorite(machineId);
+                    } on StateError {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('로그인 후 이용해주세요.')),
+                      );
+                    } catch (error) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('찜 처리 중 오류가 발생했습니다.')),
+                      );
+                    }
+                  },
+          ),
+        );
+      },
     );
   }
 }

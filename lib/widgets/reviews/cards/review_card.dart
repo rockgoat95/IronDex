@@ -80,7 +80,7 @@ class _ReviewCardState extends State<ReviewCard> {
     return Container(
       width: double.infinity,
       height: 160,
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
       child: Card(
         elevation: 3,
         color: Colors.white,

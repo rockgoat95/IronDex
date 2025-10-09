@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:irondex/providers/catalog_provider.dart';
+import 'package:irondex/screens/reviews/machine_reviews_screen.dart';
 import 'package:irondex/screens/reviews/review_create_screen.dart';
 import 'package:irondex/widgets/reviews/reviews.dart';
 import 'package:provider/provider.dart';
@@ -24,14 +27,21 @@ class _ReviewsScreenBody extends StatefulWidget {
 }
 
 class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+  String? _searchQuery;
+
   CatalogProvider get _filterProvider => context.read<CatalogProvider>();
 
   void _onBrandSelected(String? brandId) {
     _filterProvider.selectBrand(brandId);
   }
 
-  void _onMachineSelected(String? machineId) {
-    _filterProvider.selectMachine(machineId);
+  void _onMachineTapped(Map<String, dynamic> machine) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => MachineReviewsScreen(machine: machine)),
+    );
   }
 
   void _onBodyPartsChanged(List<String>? bodyParts) {
@@ -40,6 +50,19 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
 
   void _onDetailFilterChanged(String? machineType) {
     _filterProvider.selectMachineType(machineType);
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      final trimmed = value.trim();
+      final nextQuery = trimmed.isEmpty ? null : trimmed;
+      if (_searchQuery != nextQuery) {
+        setState(() {
+          _searchQuery = nextQuery;
+        });
+      }
+    });
   }
 
   void _showDetailFilterModal() {
@@ -72,11 +95,11 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
               children: [
+                _buildSearchField(),
+                const SizedBox(height: 16),
                 _buildBrandFilters(filter),
                 const SizedBox(height: 24),
                 _buildMachineSection(filter),
-                const SizedBox(height: 24),
-                _buildReviewSection(filter),
               ],
             ),
           ),
@@ -136,27 +159,40 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
           brandId: filter.selectedBrandId,
           bodyParts: filter.selectedBodyParts,
           machineType: filter.selectedMachineType,
-          selectedMachineId: filter.selectedMachineId,
-          onMachineSelected: _onMachineSelected,
+          searchQuery: _searchQuery,
+          onMachineTap: _onMachineTapped,
         ),
       ],
     );
   }
 
-  Widget _buildReviewSection(CatalogProvider filter) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Review'),
-        const SizedBox(height: 8),
-        ReviewList(
-          brandId: filter.selectedBrandId,
-          bodyParts: filter.selectedBodyParts,
-          machineType: filter.selectedMachineType,
-          selectedMachineId: filter.selectedMachineId,
+  Widget _buildSearchField() {
+    return TextField(
+      controller: _searchController,
+      onChanged: _onSearchChanged,
+      decoration: InputDecoration(
+        hintText: '머신 또는 브랜드명을 검색하세요',
+        prefixIcon: const Icon(Icons.search),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 12,
+          horizontal: 16,
         ),
-      ],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide.none,
+        ),
+      ),
+      textInputAction: TextInputAction.search,
     );
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
   }
 
   Text _buildSectionTitle(String title) {
