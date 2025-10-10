@@ -7,11 +7,13 @@ class ReviewMachineSummary extends StatelessWidget {
     required this.name,
     required this.brandName,
     required this.imageUrl,
+    this.brandLogoUrl,
   });
 
   final String name;
   final String brandName;
   final String imageUrl;
+  final String? brandLogoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -34,29 +36,29 @@ class ReviewMachineSummary extends StatelessWidget {
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             child: CachedNetworkImage(
               imageUrl: imageUrl,
-              width: 72,
-              height: 72,
+              width: 96,
+              height: 96,
               fit: BoxFit.cover,
               placeholder: (context, url) => Container(
-                width: 72,
-                height: 72,
+                width: 96,
+                height: 96,
                 alignment: Alignment.center,
                 color: theme.colorScheme.surfaceContainerHighest,
                 child: const SizedBox(
-                  width: 24,
-                  height: 24,
+                  width: 28,
+                  height: 28,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               ),
               errorWidget: (context, url, error) => Container(
-                width: 72,
-                height: 72,
+                width: 96,
+                height: 96,
                 alignment: Alignment.center,
                 color: theme.colorScheme.surfaceContainerHighest,
-                child: const Icon(Icons.fitness_center, size: 28),
+                child: const Icon(Icons.fitness_center, size: 32),
               ),
             ),
           ),
@@ -66,25 +68,52 @@ class ReviewMachineSummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  brandName,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (brandLogoUrl != null && brandLogoUrl!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: CachedNetworkImage(
+                            imageUrl: brandLogoUrl!,
+                            width: 24,
+                            height: 24,
+                            fit: BoxFit.contain,
+                            placeholder: (context, url) => Container(
+                              width: 24,
+                              height: 24,
+                              color: theme.colorScheme.surfaceContainerHighest,
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              width: 24,
+                              height: 24,
+                              color: theme.colorScheme.surfaceContainerHighest,
+                              child: const Icon(Icons.fitness_center, size: 14),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Flexible(
+                      child: Text(
+                        brandName,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
                   name,
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontSize: theme.textTheme.labelMedium?.fontSize ?? 14,
                     fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '이 머신에 대한 솔직한 후기를 들려주세요.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

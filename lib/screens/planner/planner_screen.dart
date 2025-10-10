@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:irondex/widgets/planner/planner_calendar.dart';
 import 'package:irondex/widgets/planner/planner_routine_section.dart';
+import 'package:irondex/widgets/planner/planner_summary_card.dart';
 import 'package:irondex/widgets/planner/routine_actions_sheet.dart';
 
 DateTime _stripTime(DateTime date) => DateTime(date.year, date.month, date.day);
@@ -80,53 +81,9 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
                 },
               ),
               const SizedBox(height: 24),
-              _PlannerSummaryCard(selectedDate: _selectedDate),
+              PlannerSummaryCard(selectedDate: _selectedDate),
               const SizedBox(height: 16),
               Expanded(child: PlannerRoutineSection(isToday: _isTodaySelected)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PlannerSummaryCard extends StatelessWidget {
-  const _PlannerSummaryCard({required this.selectedDate});
-
-  final DateTime selectedDate;
-
-  @override
-  Widget build(BuildContext context) {
-    final dateLabel = DateUtils.isSameDay(selectedDate, DateTime.now())
-        ? '오늘'
-        : '${selectedDate.year}년 ${selectedDate.month}월 ${selectedDate.day}일';
-
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Card(
-        elevation: 0,
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                dateLabel,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '아직 등록된 루틴이 없습니다. 오늘 계획을 세워보세요.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
-              ),
             ],
           ),
         ),
