@@ -8,7 +8,6 @@ export 'editor/review_machine_summary.dart';
 export 'filters/body_part_chips.dart';
 export 'filters/brand_filter_grid.dart';
 export 'filters/detail_filter_modal.dart';
-export 'filters/machine_filter.dart';
 export 'lists/machine_list.dart';
 export 'lists/review_list.dart';
 export 'machine_reviews/review_add_prompt_card.dart';

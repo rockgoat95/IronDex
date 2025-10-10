@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ReviewRepository {
@@ -14,7 +15,8 @@ class ReviewRepository {
     required String selectClause,
   }) {
     var query = _client
-        .from('catalog.machines')
+        .schema('catalog')
+        .from('machines')
         .select(selectClause)
         .eq('status', 'approved');
 
@@ -45,9 +47,14 @@ class ReviewRepository {
 
   Future<List<Map<String, dynamic>>> fetchBrands() async {
     final response = await _client
-        .from('catalog.brands')
+        .schema('catalog')
+        .from('brands')
         .select('id, name, logo_url');
-    return List<Map<String, dynamic>>.from(response);
+    final data = List<Map<String, dynamic>>.from(response);
+    if (kDebugMode) {
+      debugPrint('[ReviewRepository] fetchBrands count=${data.length}');
+    }
+    return data;
   }
 
   Future<List<Map<String, dynamic>>> fetchMachines({
@@ -72,7 +79,7 @@ class ReviewRepository {
         score,
         body_parts,
         type,
-        brand:catalog.brands (
+        brand:brands (
           name,
           logo_url
         )
@@ -80,7 +87,17 @@ class ReviewRepository {
     );
 
     final response = await query.range(offset, offset + limit - 1);
-    return List<Map<String, dynamic>>.from(response);
+    final data = List<Map<String, dynamic>>.from(response);
+    if (kDebugMode) {
+      debugPrint(
+        '[ReviewRepository] fetchMachines count=${data.length} '
+        'filters={brandId: $brandId, bodyParts: $bodyParts, machineType: $machineType, searchQuery: $searchQuery}',
+      );
+      if (data.isNotEmpty) {
+        debugPrint('[ReviewRepository] fetchMachines first=${data.first}');
+      }
+    }
+    return data;
   }
 
   Future<List<Map<String, dynamic>>> fetchMachineReviews({
@@ -91,7 +108,7 @@ class ReviewRepository {
     List<String>? bodyParts,
     String? type,
   }) async {
-    var query = _client.from('reviews.machine_reviews').select('''
+    var query = _client.schema('reviews').from('machine_reviews').select('''
           id,
           user_id,
           rating,
@@ -102,7 +119,7 @@ class ReviewRepository {
           user:core.users (
             username
           ),
-          machine:catalog.machines!inner (
+          machine:machines!inner (
             id,
             name,
             image_url,
@@ -110,7 +127,7 @@ class ReviewRepository {
             body_parts,
             type,
             status,
-            brand:catalog.brands (
+            brand:brands (
               id,
               name,
               logo_url
@@ -140,7 +157,20 @@ class ReviewRepository {
         .order('like_count', ascending: false)
         .range(offset, offset + limit - 1);
 
-    return List<Map<String, dynamic>>.from(response);
+    final data = List<Map<String, dynamic>>.from(response);
+    if (kDebugMode) {
+      debugPrint(
+        '[ReviewRepository] fetchMachineReviews count=${data.length} '
+        'filters={brandId: $brandId, machineId: $machineId, bodyParts: $bodyParts, type: $type}',
+      );
+      if (data.isNotEmpty) {
+        debugPrint(
+          '[ReviewRepository] fetchMachineReviews first=${data.first}',
+        );
+      }
+    }
+
+    return data;
   }
 
   Future<Set<String>> fetchLikedReviewIds() async {
@@ -150,13 +180,19 @@ class ReviewRepository {
     }
 
     final response = await _client
-        .from('reviews.machine_review_likes')
+        .schema('reviews')
+        .from('machine_review_likes')
         .select('machine_review_id')
         .eq('user_id', userId);
 
-    return response
+    final data = response
         .map<String>((row) => row['machine_review_id'].toString())
         .toSet();
+    if (kDebugMode) {
+      debugPrint('[ReviewRepository] fetchLikedReviewIds count=${data.length}');
+    }
+
+    return data;
   }
 
   Future<void> addReviewLike(String reviewId) async {
@@ -165,10 +201,13 @@ class ReviewRepository {
       throw Exception('User not authenticated');
     }
 
-    await _client.from('reviews.machine_review_likes').upsert({
+    await _client.schema('reviews').from('machine_review_likes').upsert({
       'user_id': userId,
       'machine_review_id': reviewId,
     }, onConflict: 'user_id,machine_review_id');
+    if (kDebugMode) {
+      debugPrint('[ReviewRepository] addReviewLike reviewId=$reviewId');
+    }
   }
 
   Future<void> removeReviewLike(String reviewId) async {
@@ -178,10 +217,14 @@ class ReviewRepository {
     }
 
     await _client
-        .from('reviews.machine_review_likes')
+        .schema('reviews')
+        .from('machine_review_likes')
         .delete()
         .eq('user_id', userId)
         .eq('machine_review_id', reviewId);
+    if (kDebugMode) {
+      debugPrint('[ReviewRepository] removeReviewLike reviewId=$reviewId');
+    }
   }
 
   Future<Set<String>> fetchFavoriteMachineIds() async {
@@ -191,11 +234,20 @@ class ReviewRepository {
     }
 
     final response = await _client
-        .from('catalog.machine_favorites')
+        .schema('catalog')
+        .from('machine_favorites')
         .select('machine_id')
         .eq('user_id', userId);
+    final data = response
+        .map<String>((row) => row['machine_id'].toString())
+        .toSet();
+    if (kDebugMode) {
+      debugPrint(
+        '[ReviewRepository] fetchFavoriteMachineIds count=${data.length}',
+      );
+    }
 
-    return response.map<String>((row) => row['machine_id'].toString()).toSet();
+    return data;
   }
 
   Future<void> addFavoriteMachine(String machineId) async {
@@ -204,10 +256,13 @@ class ReviewRepository {
       throw Exception('User not authenticated');
     }
 
-    await _client.from('catalog.machine_favorites').upsert({
+    await _client.schema('catalog').from('machine_favorites').upsert({
       'user_id': userId,
       'machine_id': machineId,
     }, onConflict: 'user_id,machine_id');
+    if (kDebugMode) {
+      debugPrint('[ReviewRepository] addFavoriteMachine machineId=$machineId');
+    }
   }
 
   Future<void> removeFavoriteMachine(String machineId) async {
@@ -217,9 +272,15 @@ class ReviewRepository {
     }
 
     await _client
-        .from('catalog.machine_favorites')
+        .schema('catalog')
+        .from('machine_favorites')
         .delete()
         .eq('user_id', userId)
         .eq('machine_id', machineId);
+    if (kDebugMode) {
+      debugPrint(
+        '[ReviewRepository] removeFavoriteMachine machineId=$machineId',
+      );
+    }
   }
 }

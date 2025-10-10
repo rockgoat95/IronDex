@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:irondex/providers/machine_favorite_provider.dart';
 import 'package:irondex/services/review_repository.dart';
@@ -161,6 +162,9 @@ class _MachineListState extends State<MachineList> {
         _isLoadingMore = false;
       });
     } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[MachineList] _loadMachines error=$error');
+      }
       if (!mounted) return;
       setState(() {
         _isInitialLoading = false;
