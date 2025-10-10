@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:irondex/providers/catalog_provider.dart';
 import 'package:irondex/screens/reviews/machine_reviews_screen.dart';
-import 'package:irondex/screens/reviews/review_create_screen.dart';
 import 'package:irondex/widgets/reviews/reviews.dart';
 import 'package:provider/provider.dart';
 
@@ -106,7 +105,6 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
             ),
           ),
           _buildFilterFab(),
-          _buildReviewFab(),
         ],
       ),
     );
@@ -217,32 +215,6 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
           backgroundColor: Colors.white,
           foregroundColor: Colors.grey.shade600,
           child: const Icon(Icons.tune),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReviewFab() {
-    return Align(
-      alignment: Alignment.bottomRight,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Tooltip(
-          message: '리뷰 작성',
-          child: FloatingActionButton.small(
-            heroTag: 'review_button',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ReviewCreateScreen(),
-                ),
-              );
-            },
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.grey.shade600,
-            child: const Icon(Icons.add),
-          ),
         ),
       ),
     );

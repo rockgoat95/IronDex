@@ -14,7 +14,7 @@ class ReviewRepository {
     required String selectClause,
   }) {
     var query = _client
-        .from('machines')
+        .from('catalog.machines')
         .select(selectClause)
         .eq('status', 'approved');
 
@@ -44,7 +44,9 @@ class ReviewRepository {
   }
 
   Future<List<Map<String, dynamic>>> fetchBrands() async {
-    final response = await _client.from('brands').select('id, name, logo_url');
+    final response = await _client
+        .from('catalog.brands')
+        .select('id, name, logo_url');
     return List<Map<String, dynamic>>.from(response);
   }
 
@@ -70,7 +72,7 @@ class ReviewRepository {
         score,
         body_parts,
         type,
-        brand:brands (
+        brand:catalog.brands (
           name,
           logo_url
         )
@@ -89,7 +91,7 @@ class ReviewRepository {
     List<String>? bodyParts,
     String? type,
   }) async {
-    var query = _client.from('machine_reviews').select('''
+    var query = _client.from('reviews.machine_reviews').select('''
           id,
           user_id,
           rating,
@@ -97,10 +99,10 @@ class ReviewRepository {
           comment,
           image_urls,
           created_at,
-          user:users (
+          user:core.users (
             username
           ),
-          machine:machines!inner (
+          machine:catalog.machines!inner (
             id,
             name,
             image_url,
@@ -108,7 +110,7 @@ class ReviewRepository {
             body_parts,
             type,
             status,
-            brand:brands (
+            brand:catalog.brands (
               id,
               name,
               logo_url
@@ -148,7 +150,7 @@ class ReviewRepository {
     }
 
     final response = await _client
-        .from('machine_review_likes')
+        .from('reviews.machine_review_likes')
         .select('machine_review_id')
         .eq('user_id', userId);
 
@@ -163,7 +165,7 @@ class ReviewRepository {
       throw Exception('User not authenticated');
     }
 
-    await _client.from('machine_review_likes').upsert({
+    await _client.from('reviews.machine_review_likes').upsert({
       'user_id': userId,
       'machine_review_id': reviewId,
     }, onConflict: 'user_id,machine_review_id');
@@ -176,7 +178,7 @@ class ReviewRepository {
     }
 
     await _client
-        .from('machine_review_likes')
+        .from('reviews.machine_review_likes')
         .delete()
         .eq('user_id', userId)
         .eq('machine_review_id', reviewId);
@@ -189,7 +191,7 @@ class ReviewRepository {
     }
 
     final response = await _client
-        .from('machine_favorites')
+        .from('catalog.machine_favorites')
         .select('machine_id')
         .eq('user_id', userId);
 
@@ -202,7 +204,7 @@ class ReviewRepository {
       throw Exception('User not authenticated');
     }
 
-    await _client.from('machine_favorites').upsert({
+    await _client.from('catalog.machine_favorites').upsert({
       'user_id': userId,
       'machine_id': machineId,
     }, onConflict: 'user_id,machine_id');
@@ -215,7 +217,7 @@ class ReviewRepository {
     }
 
     await _client
-        .from('machine_favorites')
+        .from('catalog.machine_favorites')
         .delete()
         .eq('user_id', userId)
         .eq('machine_id', machineId);

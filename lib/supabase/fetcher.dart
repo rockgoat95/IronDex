@@ -8,7 +8,7 @@ PostgrestFilterBuilder _buildMachineQuery({
   required String selectClause,
 }) {
   var query = Supabase.instance.client
-      .from('machines')
+      .from('catalog.machines')
       .select(selectClause)
       .eq('status', 'approved'); // 승인된 머신만
 
@@ -30,7 +30,7 @@ PostgrestFilterBuilder _buildMachineQuery({
 
 Future<List<Map<String, dynamic>>> fetchBrands() async {
   final response = await Supabase.instance.client
-      .from('brands')
+      .from('catalog.brands')
       .select('id, name, logo_url');
 
   return response; // 이미 List<Map<String, dynamic>>
@@ -54,7 +54,7 @@ Future<List<Map<String, dynamic>>> fetchMachines({
       score,
       body_parts,
       type,
-      brand:brands (
+      brand:catalog.brands (
         name,
         logo_url
       )
@@ -74,7 +74,8 @@ Future<List<Map<String, dynamic>>> fetchMachineReviews({
   List<String>? bodyParts,
   String? type,
 }) async {
-  var query = Supabase.instance.client.from('machine_reviews').select('''
+  var query = Supabase.instance.client.from('reviews.machine_reviews').select(
+    '''
         id,
         user_id,
         rating,
@@ -82,10 +83,10 @@ Future<List<Map<String, dynamic>>> fetchMachineReviews({
         comment,
         image_urls,
         created_at,
-        user:users (
+        user:core.users (
           username
         ),
-        machine:machines!inner (
+        machine:catalog.machines!inner (
           id,
           name,
           image_url,
@@ -93,13 +94,14 @@ Future<List<Map<String, dynamic>>> fetchMachineReviews({
           body_parts,
           type,
           status,
-          brand:brands (
+          brand:catalog.brands (
             id,
             name,
             logo_url
           )
         )
-      ''');
+      ''',
+  );
 
   // 승인된 머신만
   query = query.eq('machine.status', 'approved');

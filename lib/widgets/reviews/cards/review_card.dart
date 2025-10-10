@@ -76,6 +76,8 @@ class _ReviewCardState extends State<ReviewCard> {
     final machine = widget.review['machine'] ?? {};
     final brand = machine['brand'] ?? {};
     final user = widget.review['user'] ?? {};
+    final brandName = (brand['name'] ?? '').toString();
+    final brandLogoUrl = (brand['logo_url'] ?? '').toString();
 
     return Container(
       width: double.infinity,
@@ -109,30 +111,48 @@ class _ReviewCardState extends State<ReviewCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            machine['name'] ?? 'Not Found',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
+                    if (brandName.isNotEmpty || brandLogoUrl.isNotEmpty)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (brandLogoUrl.isNotEmpty)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Image.network(
+                                brandLogoUrl,
+                                width: 18,
+                                height: 18,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const SizedBox.shrink(),
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        if (brand['logo_url'] != null)
-                          Image.network(
-                            brand['logo_url'],
-                            width: 24,
-                            height: 24,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const SizedBox.shrink(),
-                          ),
-                      ],
+                          if (brandLogoUrl.isNotEmpty && brandName.isNotEmpty)
+                            const SizedBox(width: 6),
+                          if (brandName.isNotEmpty)
+                            Flexible(
+                              child: Text(
+                                brandName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    if (brandName.isNotEmpty || brandLogoUrl.isNotEmpty)
+                      const SizedBox(height: 6),
+                    Text(
+                      machine['name'] ?? 'Not Found',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Row(

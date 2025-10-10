@@ -1,9 +1,14 @@
 export 'cards/machine_card.dart';
 export 'cards/review_card.dart';
 export 'components/brand_item.dart';
+export 'editor/machine_search_widget.dart';
+export 'editor/photo_upload_widget.dart';
+export 'editor/rating_widget.dart';
+export 'editor/review_machine_summary.dart';
 export 'filters/body_part_chips.dart';
 export 'filters/brand_filter_grid.dart';
 export 'filters/detail_filter_modal.dart';
 export 'filters/machine_filter.dart';
 export 'lists/machine_list.dart';
 export 'lists/review_list.dart';
+export 'machine_reviews/review_add_prompt_card.dart';

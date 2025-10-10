@@ -2,12 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:irondex/widgets/writing_review/machine_search_widget.dart';
-import 'package:irondex/widgets/writing_review/photo_upload_widget.dart';
-import 'package:irondex/widgets/writing_review/rating_widget.dart';
+import 'package:irondex/widgets/reviews/reviews.dart';
 
 class ReviewCreateScreen extends StatefulWidget {
-  const ReviewCreateScreen({super.key});
+  const ReviewCreateScreen({super.key, this.machine});
+
+  final Map<String, dynamic>? machine;
 
   @override
   State<ReviewCreateScreen> createState() => _ReviewCreateScreenState();
@@ -20,10 +20,27 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
 
   String? _selectedMachineId;
   String? _selectedMachineName;
+  String? _selectedMachineBrandName;
+  String? _selectedMachineImageUrl;
   double _rating = 5.0;
   bool _isSubmitting = false;
   List<File> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
+
+  bool get _hasPreselectedMachine => widget.machine != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final machine = widget.machine;
+    if (machine != null) {
+      final brand = (machine['brand'] as Map<String, dynamic>?) ?? {};
+      _selectedMachineId = machine['id']?.toString();
+      _selectedMachineName = machine['name']?.toString();
+      _selectedMachineBrandName = brand['name']?.toString();
+      _selectedMachineImageUrl = machine['image_url']?.toString();
+    }
+  }
 
   @override
   void dispose() {
@@ -36,6 +53,8 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
     setState(() {
       _selectedMachineId = machineId;
       _selectedMachineName = machineName;
+      _selectedMachineBrandName = null;
+      _selectedMachineImageUrl = null;
     });
   }
 
@@ -111,11 +130,20 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              MachineSearchWidget(
-                selectedMachineName: _selectedMachineName,
-                onMachineSelected: _onMachineSelected,
-              ),
-              const SizedBox(height: 24),
+              if (!_hasPreselectedMachine) ...[
+                MachineSearchWidget(
+                  selectedMachineName: _selectedMachineName,
+                  onMachineSelected: _onMachineSelected,
+                ),
+                const SizedBox(height: 24),
+              ] else ...[
+                ReviewMachineSummary(
+                  name: _selectedMachineName ?? 'Unknown machine',
+                  brandName: _selectedMachineBrandName ?? '',
+                  imageUrl: _selectedMachineImageUrl ?? '',
+                ),
+                const SizedBox(height: 24),
+              ],
               RatingWidget(rating: _rating, onRatingChanged: _onRatingChanged),
               const SizedBox(height: 24),
               const Text(

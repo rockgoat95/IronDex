@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:irondex/screens/reviews/review_create_screen.dart';
 import 'package:irondex/widgets/reviews/reviews.dart';
 
 class MachineReviewsScreen extends StatelessWidget {
@@ -14,7 +15,7 @@ class MachineReviewsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(machine['name'] ?? 'Machine reviews'),
+        title: Text('Machine Reviews'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.of(context).maybePop(),
@@ -40,6 +41,16 @@ class MachineReviewsScreen extends StatelessWidget {
                 isFavorite: false,
                 onFavoriteToggle: null,
               ),
+            ),
+            const SizedBox(height: 16),
+            ReviewAddPromptCard(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ReviewCreateScreen(machine: machine),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 24),
             if (_machineId != null)
