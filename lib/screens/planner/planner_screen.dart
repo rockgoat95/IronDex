@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:irondex/widgets/planner/planner_calendar.dart';
-import 'package:irondex/widgets/planner/planner_routine_section.dart';
 import 'package:irondex/widgets/planner/planner_summary_card.dart';
 import 'package:irondex/widgets/planner/routine_actions_sheet.dart';
 
@@ -39,6 +38,14 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
       return;
     }
     final next = _stripTime(date);
+    final bool isAutoMonthSelection =
+        (next.year != _focusedMonth.year ||
+            next.month != _focusedMonth.month) &&
+        next.day == _selectedDate.day;
+
+    if (isAutoMonthSelection) {
+      return;
+    }
     setState(() {
       _selectedDate = next;
       _focusedMonth = DateTime(next.year, next.month);
@@ -58,6 +65,12 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
 
   @override
   Widget build(BuildContext context) {
+    final DateTime? displaySelectedDate =
+        (_selectedDate.year == _focusedMonth.year &&
+            _selectedDate.month == _focusedMonth.month)
+        ? _selectedDate
+        : null;
+
     return Scaffold(
       appBar: AppBar(title: const Text('플래너'), elevation: 0),
       body: SafeArea(
@@ -66,7 +79,7 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
           child: Column(
             children: [
               PlannerCalendar(
-                selectedDate: _selectedDate,
+                selectedDate: displaySelectedDate,
                 focusedMonth: _focusedMonth,
                 onDateSelected: _handleDateSelected,
                 onMonthChanged: (date) {
@@ -74,16 +87,10 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
                     _focusedMonth = DateTime(date.year, date.month);
                     _skipNextAutoSelection = true;
                   });
-                  Future<void>.delayed(const Duration(milliseconds: 250), () {
-                    if (!mounted) return;
-                    _skipNextAutoSelection = false;
-                  });
                 },
               ),
               const SizedBox(height: 24),
               PlannerSummaryCard(selectedDate: _selectedDate),
-              const SizedBox(height: 16),
-              Expanded(child: PlannerRoutineSection(isToday: _isTodaySelected)),
             ],
           ),
         ),

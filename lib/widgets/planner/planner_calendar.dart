@@ -10,7 +10,7 @@ class PlannerCalendar extends StatelessWidget {
     required this.onMonthChanged,
   });
 
-  final DateTime selectedDate;
+  final DateTime? selectedDate;
   final DateTime focusedMonth;
   final ValueChanged<DateTime> onDateSelected;
   final ValueChanged<DateTime> onMonthChanged;
@@ -25,7 +25,7 @@ class PlannerCalendar extends StatelessWidget {
     final baseDayColor = theme.textTheme.bodyMedium?.color;
 
     return Calendar(
-      initialDate: selectedDate,
+      initialDate: selectedDate ?? focusedMonth,
       startOnMonday: false,
       weekDays: const ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
       onDateSelected: onDateSelected,
@@ -54,7 +54,9 @@ class PlannerCalendar extends StatelessWidget {
     final bool isInFocusedMonth =
         date.month == focusedMonth.month && date.year == focusedMonth.year;
     final bool isSelected =
-        DateUtils.isSameDay(date, selectedDate) && isInFocusedMonth;
+        selectedDate != null &&
+        DateUtils.isSameDay(date, selectedDate!) &&
+        isInFocusedMonth;
     final bool isToday =
         DateUtils.isSameDay(date, DateTime.now()) && isInFocusedMonth;
     final bool isOutOfMonth = !isInFocusedMonth;
