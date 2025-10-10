@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_neat_and_clean_calendar/flutter_neat_and_clean_calendar.dart';
+import 'package:irondex/widgets/planner/planner_calendar.dart';
+import 'package:irondex/widgets/planner/routine_actions_sheet.dart';
 
 DateTime _stripTime(DateTime date) => DateTime(date.year, date.month, date.day);
 
@@ -20,117 +21,57 @@ class _PlannerScreenBody extends StatefulWidget {
 }
 
 class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
-  late DateTime _selectedDate = _stripTime(DateTime.now());
+  DateTime _selectedDate = _stripTime(DateTime.now());
+  late DateTime _focusedMonth = DateTime(
+    _selectedDate.year,
+    _selectedDate.month,
+  );
 
-  bool get _isTodaySelected => DateUtils.isSameDay(_selectedDate, DateTime.now());
+  bool get _isTodaySelected =>
+      DateUtils.isSameDay(_selectedDate, DateTime.now());
 
   void _handleDateSelected(DateTime date) {
     final next = _stripTime(date);
-    final isToday = DateUtils.isSameDay(next, DateTime.now());
-    setState(() => _selectedDate = next);
-
-    if (isToday) {
-      _showTodayActions(context);
-    }
+    setState(() {
+      _selectedDate = next;
+      _focusedMonth = DateTime(next.year, next.month);
+    });
+    _showRoutineActions(context, next);
   }
 
-  void _showTodayActions(BuildContext context) {
+  void _showRoutineActions(BuildContext context, DateTime date) {
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '오늘 루틴 작업',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                FilledButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('새로운 루틴 추가 기능은 준비 중입니다.')),
-                    );
-                  },
-                  icon: const Icon(Icons.add_circle_outline),
-                  label: const Text('새로운 루틴 추가'),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('이전 루틴 가져오기 기능은 준비 중입니다.')),
-                    );
-                  },
-                  icon: const Icon(Icons.history_rounded),
-                  label: const Text('이전 루틴 가져오기'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+      builder: (context) => RoutineActionsSheet(targetDate: date),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final weekdayStyle = theme.textTheme.labelMedium?.copyWith(
-      fontWeight: FontWeight.w600,
-      color: theme.colorScheme.onSurfaceVariant,
-    );
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('플래너'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('플래너'), elevation: 0),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           child: Column(
             children: [
-              Calendar(
-                initialDate: _selectedDate,
-                startOnMonday: false,
-                weekDays: const ['일', '월', '화', '수', '목', '금', '토'],
+              PlannerCalendar(
+                selectedDate: _selectedDate,
+                focusedMonth: _focusedMonth,
                 onDateSelected: _handleDateSelected,
-                isExpanded: true,
-                hideTodayIcon: true,
-                showEvents: false,
-                selectedColor: theme.colorScheme.primary,
-                selectedTodayColor: theme.colorScheme.primary,
-                todayColor: theme.colorScheme.primaryContainer,
-                defaultDayColor:
-                    theme.textTheme.bodyMedium?.color?.withOpacity(0.65),
-                defaultOutOfMonthDayColor:
-                    theme.textTheme.bodyMedium?.color?.withOpacity(0.25),
-                dayOfWeekStyle: weekdayStyle,
-                displayMonthTextStyle: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-                bottomBarTextStyle: theme.textTheme.bodyMedium,
-                expandableDateFormat: 'yyyy년 M월 d일 EEEE',
+                onMonthChanged: (date) {
+                  setState(() {
+                    _focusedMonth = DateTime(date.year, date.month);
+                  });
+                },
               ),
               const SizedBox(height: 24),
               _PlannerSummaryCard(selectedDate: _selectedDate),
               const SizedBox(height: 16),
-              Expanded(
-                child: _RoutinePlaceholder(isToday: _isTodaySelected),
-              ),
+              Expanded(child: _RoutinePlaceholder(isToday: _isTodaySelected)),
             ],
           ),
         ),
@@ -164,18 +105,16 @@ class _PlannerSummaryCard extends StatelessWidget {
             children: [
               Text(
                 dateLabel,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
                 '아직 등록된 루틴이 없습니다. 오늘 계획을 세워보세요.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: Colors.grey[700]),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
               ),
             ],
           ),
@@ -198,10 +137,9 @@ class _RoutinePlaceholder extends StatelessWidget {
         children: [
           Text(
             '오늘의 루틴',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Expanded(
