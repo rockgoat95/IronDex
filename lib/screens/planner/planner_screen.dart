@@ -72,7 +72,7 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
         : null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('플래너'), elevation: 0),
+      appBar: AppBar(title: const Text('Planner'), elevation: 0),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),

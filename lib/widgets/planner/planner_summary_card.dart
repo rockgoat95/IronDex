@@ -8,8 +8,8 @@ class PlannerSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateLabel = DateUtils.isSameDay(selectedDate, DateTime.now())
-        ? '오늘'
-        : '${selectedDate.year}년 ${selectedDate.month}월 ${selectedDate.day}일';
+        ? 'Today'
+        : '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
 
     final theme = Theme.of(context);
 
@@ -33,7 +33,7 @@ class PlannerSummaryCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '아직 등록된 루틴이 없습니다. 오늘 계획을 세워보세요.',
+                'No routines yet. Start planning your workout for this day.',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: Colors.grey[700],
                 ),
