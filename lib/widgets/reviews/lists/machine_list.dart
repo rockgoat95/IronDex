@@ -10,6 +10,7 @@ class MachineList extends StatefulWidget {
   final String? machineType;
   final String? searchQuery;
   final ValueChanged<Map<String, dynamic>>? onMachineTap;
+  final ScrollController? parentScrollController;
 
   const MachineList({
     super.key,
@@ -18,6 +19,7 @@ class MachineList extends StatefulWidget {
     this.machineType,
     this.searchQuery,
     this.onMachineTap,
+    this.parentScrollController,
   });
 
   @override
@@ -32,6 +34,7 @@ class _MachineListState extends State<MachineList> {
   bool _isLoadingMore = false;
   bool _hasMore = true;
   int _offset = 0;
+  ScrollController? _attachedScrollController;
 
   @override
   void initState() {
@@ -44,13 +47,70 @@ class _MachineListState extends State<MachineList> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _attachScrollController(
+      widget.parentScrollController ?? PrimaryScrollController.maybeOf(context),
+    );
+  }
+
+  @override
   void didUpdateWidget(MachineList oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.parentScrollController != widget.parentScrollController) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _attachScrollController(
+          widget.parentScrollController ??
+              PrimaryScrollController.maybeOf(context),
+        );
+      });
+    }
     if (oldWidget.brandId != widget.brandId ||
         oldWidget.bodyParts != widget.bodyParts ||
         oldWidget.machineType != widget.machineType ||
         oldWidget.searchQuery != widget.searchQuery) {
       _loadMachines(reset: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _detachScrollController();
+    super.dispose();
+  }
+
+  void _attachScrollController(ScrollController? controller) {
+    if (controller == _attachedScrollController) {
+      return;
+    }
+
+    _detachScrollController();
+    _attachedScrollController = controller;
+    _attachedScrollController?.addListener(_handleScroll);
+  }
+
+  void _detachScrollController() {
+    _attachedScrollController?.removeListener(_handleScroll);
+    _attachedScrollController = null;
+  }
+
+  void _handleScroll() {
+    final controller = _attachedScrollController;
+    if (controller == null || !controller.hasClients) {
+      return;
+    }
+
+    final position = controller.position;
+    _maybeLoadMore(position.pixels, position.maxScrollExtent);
+  }
+
+  void _maybeLoadMore(double pixels, double maxScrollExtent) {
+    if (pixels >= maxScrollExtent - 200 &&
+        _hasMore &&
+        !_isLoadingMore &&
+        !_isInitialLoading) {
+      _loadMachines();
     }
   }
 
@@ -132,13 +192,10 @@ class _MachineListState extends State<MachineList> {
 
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification.metrics.pixels >=
-                notification.metrics.maxScrollExtent - 200 &&
-            _hasMore &&
-            !_isLoadingMore &&
-            !_isInitialLoading) {
-          _loadMachines();
-        }
+        _maybeLoadMore(
+          notification.metrics.pixels,
+          notification.metrics.maxScrollExtent,
+        );
         return false;
       },
       child: Column(
@@ -151,7 +208,7 @@ class _MachineListState extends State<MachineList> {
               crossAxisCount: 2,
               mainAxisSpacing: 16,
               crossAxisSpacing: 16,
-              childAspectRatio: 0.78,
+              childAspectRatio: 0.7,
             ),
             itemBuilder: (context, index) {
               final m = _machines[index];

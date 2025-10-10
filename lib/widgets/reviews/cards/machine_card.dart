@@ -50,6 +50,10 @@ class MachineCard extends StatelessWidget {
                   Positioned.fill(
                     child: Container(
                       color: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       alignment: Alignment.center,
                       child: CachedNetworkImage(
                         imageUrl: imageUrl,
@@ -62,30 +66,6 @@ class MachineCard extends StatelessWidget {
                         errorWidget: (context, url, error) => Container(
                           color: Colors.grey[300],
                           child: const Icon(Icons.broken_image, size: 48),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: CachedNetworkImage(
-                        imageUrl: brandLogoUrl,
-                        width: 32,
-                        height: 32,
-                        fit: BoxFit.contain,
-                        placeholder: (context, url) => Container(
-                          width: 32,
-                          height: 32,
-                          color: Colors.grey[200],
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          width: 32,
-                          height: 32,
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.broken_image, size: 18),
                         ),
                       ),
                     ),
@@ -121,12 +101,42 @@ class MachineCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-            child: Text(
-              brandName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: CachedNetworkImage(
+                    imageUrl: brandLogoUrl,
+                    width: 18,
+                    height: 18,
+                    fit: BoxFit.contain,
+                    placeholder: (context, url) => Container(
+                      width: 18,
+                      height: 18,
+                      color: Colors.grey[200],
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      width: 18,
+                      height: 18,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.broken_image, size: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    brandName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Padding(

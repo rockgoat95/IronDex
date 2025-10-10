@@ -30,6 +30,7 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
   String? _searchQuery;
+  final ScrollController _scrollController = ScrollController();
 
   CatalogProvider get _filterProvider => context.read<CatalogProvider>();
 
@@ -93,6 +94,7 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
         children: [
           SafeArea(
             child: ListView(
+              controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
               children: [
                 _buildSearchField(),
@@ -161,6 +163,7 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
           machineType: filter.selectedMachineType,
           searchQuery: _searchQuery,
           onMachineTap: _onMachineTapped,
+          parentScrollController: _scrollController,
         ),
       ],
     );
@@ -192,6 +195,7 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
