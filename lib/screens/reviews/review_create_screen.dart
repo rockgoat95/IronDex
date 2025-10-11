@@ -2,7 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:irondex/providers/auth_provider.dart';
+import 'package:irondex/services/review_repository.dart';
 import 'package:irondex/widgets/reviews/reviews.dart';
+import 'package:provider/provider.dart';
 
 class ReviewCreateScreen extends StatefulWidget {
   const ReviewCreateScreen({super.key, required this.machine});
@@ -80,26 +83,58 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
         return;
       }
 
+      final authProvider = context.read<AuthProvider>();
+      final repository = context.read<ReviewRepository>();
+      final currentUserId = authProvider.currentUser?.id;
+
+      if (currentUserId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('리뷰를 작성하려면 로그인해주세요.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       setState(() {
         _isSubmitting = true;
       });
 
-      await Future.delayed(const Duration(seconds: 2));
+      try {
+        await repository.createReview(
+          machineId: _selectedMachineId!,
+          userId: currentUserId,
+          title: _titleController.text.trim(),
+          comment: _contentController.text.trim(),
+          rating: _rating,
+          imageFiles: _selectedImages,
+        );
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      setState(() {
-        _isSubmitting = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Review has been submitted!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Review has been submitted!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop(true);
+      } catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('리뷰 저장 중 오류가 발생했습니다: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+          });
+        }
+      }
     }
   }
 

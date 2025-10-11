@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 class ReviewRepository {
   ReviewRepository({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
 
   final SupabaseClient _client;
+  static const _reviewBucket = 'review_images';
 
   PostgrestFilterBuilder _buildMachineQuery({
     String? brandId,
@@ -113,13 +117,14 @@ class ReviewRepository {
           user_id,
           rating,
           like_count,
+          title,
           comment,
           image_urls,
           created_at,
           user:core.users (
             username
           ),
-          machine:machines!inner (
+          machine:catalog.machines!inner (
             id,
             name,
             image_url,
@@ -127,7 +132,7 @@ class ReviewRepository {
             body_parts,
             type,
             status,
-            brand:brands (
+            brand:catalog.brands (
               id,
               name,
               logo_url
@@ -281,6 +286,69 @@ class ReviewRepository {
       debugPrint(
         '[ReviewRepository] removeFavoriteMachine machineId=$machineId',
       );
+    }
+  }
+
+  Future<void> createReview({
+    required String machineId,
+    required String userId,
+    required String title,
+    required String comment,
+    required double rating,
+    List<File>? imageFiles,
+  }) async {
+    final uuid = const Uuid();
+    final List<String> uploadedUrls = [];
+    final List<String> uploadedPaths = [];
+    final files = imageFiles ?? const <File>[];
+
+    try {
+      for (final file in files) {
+        final extension = file.path.contains('.')
+            ? file.path.split('.').last
+            : 'jpg';
+        final objectPath = '$machineId/${uuid.v4()}.$extension';
+        final fileBytes = await file.readAsBytes();
+
+        await _client.storage
+            .from(_reviewBucket)
+            .uploadBinary(objectPath, fileBytes);
+
+        uploadedPaths.add(objectPath);
+        final publicUrl = _client.storage
+            .from(_reviewBucket)
+            .getPublicUrl(objectPath);
+        uploadedUrls.add(publicUrl);
+      }
+
+      final payload = <String, dynamic>{
+        'machine_id': machineId,
+        'user_id': userId,
+        'title': title,
+        'comment': comment,
+        'rating': rating,
+        'image_urls': uploadedUrls.isEmpty
+            ? const <dynamic>[]
+            : List<dynamic>.from(uploadedUrls),
+      };
+
+      await _client.schema('reviews').from('machine_reviews').insert(payload);
+
+      if (kDebugMode) {
+        debugPrint(
+          '[ReviewRepository] createReview machineId=$machineId userId=$userId '
+          'images=${uploadedUrls.length}',
+        );
+      }
+    } catch (error) {
+      if (uploadedPaths.isNotEmpty) {
+        try {
+          await _client.storage.from(_reviewBucket).remove(uploadedPaths);
+        } catch (_) {
+          // ignore cleanup errors
+        }
+      }
+      rethrow;
     }
   }
 }

@@ -29,9 +29,6 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
   );
   bool _skipNextAutoSelection = false;
 
-  bool get _isTodaySelected =>
-      DateUtils.isSameDay(_selectedDate, DateTime.now());
-
   void _handleDateSelected(DateTime date) {
     if (_skipNextAutoSelection) {
       _skipNextAutoSelection = false;

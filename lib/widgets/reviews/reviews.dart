@@ -1,7 +1,6 @@
 export 'cards/machine_card.dart';
 export 'cards/review_card.dart';
 export 'components/brand_item.dart';
-export 'editor/machine_search_widget.dart';
 export 'editor/photo_upload_widget.dart';
 export 'editor/rating_widget.dart';
 export 'editor/review_machine_summary.dart';

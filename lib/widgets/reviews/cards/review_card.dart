@@ -78,6 +78,8 @@ class _ReviewCardState extends State<ReviewCard> {
     final user = widget.review['user'] ?? {};
     final brandName = (brand['name'] ?? '').toString();
     final brandLogoUrl = (brand['logo_url'] ?? '').toString();
+    final title = (widget.review['title'] ?? '').toString();
+    final comment = (widget.review['comment'] ?? '').toString();
 
     return Container(
       width: double.infinity,
@@ -155,6 +157,18 @@ class _ReviewCardState extends State<ReviewCard> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
+                    if (title.isNotEmpty) ...[
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                    ],
                     Row(
                       children: [
                         Text(
@@ -181,7 +195,7 @@ class _ReviewCardState extends State<ReviewCard> {
                     const SizedBox(height: 8),
                     Expanded(
                       child: Text(
-                        widget.review['comment'] ?? '',
+                        comment,
                         style: const TextStyle(fontSize: 13),
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
