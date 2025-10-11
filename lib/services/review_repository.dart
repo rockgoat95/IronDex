@@ -112,49 +112,22 @@ class ReviewRepository {
     List<String>? bodyParts,
     String? type,
   }) async {
-    var query = _client.schema('reviews').from('machine_reviews').select('''
-          id,
-          user_id,
-          rating,
-          like_count,
-          title,
-          comment,
-          image_urls,
-          created_at,
-          user:core.users (
-            username
-          ),
-          machine:catalog.machines!inner (
-            id,
-            name,
-            image_url,
-            brand_id,
-            body_parts,
-            type,
-            status,
-            brand:catalog.brands (
-              id,
-              name,
-              logo_url
-            )
-          )
-        ''');
-
-    query = query.eq('machine.status', 'approved');
+    var query = _client
+        .schema('reviews')
+        .from('machine_reviews_view')
+        .select('*');
 
     if (machineId != null && machineId.isNotEmpty) {
       query = query.eq('machine_id', machineId);
     } else {
       if (brandId != null && brandId.isNotEmpty) {
-        query = query.eq('machine.brand_id', brandId);
+        query = query.eq('machine_brand_id', brandId);
       }
-
-      if (bodyParts != null && bodyParts.isNotEmpty) {
-        query = query.overlaps('machine.body_parts', bodyParts);
-      }
-
       if (type != null && type.isNotEmpty) {
-        query = query.eq('machine.type', type);
+        query = query.eq('machine_type', type);
+      }
+      if (bodyParts != null && bodyParts.isNotEmpty) {
+        query = query.overlaps('machine_body_parts', bodyParts);
       }
     }
 
@@ -162,7 +135,43 @@ class ReviewRepository {
         .order('like_count', ascending: false)
         .range(offset, offset + limit - 1);
 
-    final data = List<Map<String, dynamic>>.from(response);
+    final rows = List<Map<String, dynamic>>.from(response);
+    final data = rows.map((row) {
+      final brand = <String, dynamic>{
+        'id': row['brand_id'] ?? row['machine_brand_id'],
+        'name': row['brand_name'] ?? '',
+        'logo_url': row['brand_logo_url'] ?? '',
+      }..removeWhere((key, value) => value == null);
+
+      final machine = <String, dynamic>{
+        'id': row['machine_id'],
+        'name': row['machine_name'] ?? row['name'] ?? '',
+        'image_url': row['machine_image_url'] ?? row['image_url'] ?? '',
+        'brand_id': row['machine_brand_id'] ?? row['brand_id'],
+        'body_parts': row['machine_body_parts'] ?? row['body_parts'],
+        'type': row['machine_type'] ?? row['type'],
+        'brand': brand,
+      }..removeWhere((key, value) => value == null);
+
+      final user = <String, dynamic>{
+        'username': row['username'] ?? row['user_username'] ?? '',
+      };
+
+      return <String, dynamic>{
+        'id': row['id'],
+        'user_id': row['user_id'],
+        'rating': row['rating'],
+        'like_count': row['like_count'],
+        'title': row['title'],
+        'comment': row['comment'],
+        'image_urls': row['image_urls'] ?? row['img_urls'] ?? const <dynamic>[],
+        'img_urls': row['img_urls'] ?? row['image_urls'] ?? const <dynamic>[],
+        'created_at': row['created_at'],
+        'machine': machine,
+        'user': user,
+      };
+    }).toList();
+
     if (kDebugMode) {
       debugPrint(
         '[ReviewRepository] fetchMachineReviews count=${data.length} '
@@ -190,14 +199,17 @@ class ReviewRepository {
         .select('machine_review_id')
         .eq('user_id', userId);
 
-    final data = response
+    final liked = response
         .map<String>((row) => row['machine_review_id'].toString())
         .toSet();
+
     if (kDebugMode) {
-      debugPrint('[ReviewRepository] fetchLikedReviewIds count=${data.length}');
+      debugPrint(
+        '[ReviewRepository] fetchLikedReviewIds count=${liked.length}',
+      );
     }
 
-    return data;
+    return liked;
   }
 
   Future<void> addReviewLike(String reviewId) async {
@@ -350,5 +362,98 @@ class ReviewRepository {
       }
       rethrow;
     }
+  }
+
+  Future<bool> hasUserReviewForMachine({
+    required String machineId,
+    required String userId,
+  }) async {
+    final response = await _client
+        .schema('reviews')
+        .from('machine_reviews')
+        .select('id')
+        .eq('machine_id', machineId)
+        .eq('user_id', userId)
+        .limit(1);
+
+    return response.isNotEmpty;
+  }
+
+  Future<void> deleteReview(String reviewId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final records = await _client
+        .schema('reviews')
+        .from('machine_reviews')
+        .select('id,user_id,image_urls')
+        .eq('id', reviewId)
+        .limit(1);
+
+    if (records.isEmpty) {
+      throw Exception('리뷰를 찾을 수 없습니다.');
+    }
+
+    final review = Map<String, dynamic>.from(records.first);
+    final authorId = review['user_id']?.toString();
+    if (authorId == null || authorId != userId) {
+      throw Exception('리뷰를 삭제할 권한이 없습니다.');
+    }
+
+    final imageUrls = review['image_urls'] is List
+        ? (review['image_urls'] as List).whereType<String>().toList()
+        : const <String>[];
+
+    final storagePaths = imageUrls
+        .map(_extractStoragePathFromUrl)
+        .whereType<String>()
+        .toList();
+
+    await _client
+        .schema('reviews')
+        .from('machine_reviews')
+        .delete()
+        .eq('id', reviewId);
+
+    if (storagePaths.isNotEmpty) {
+      try {
+        await _client.storage.from(_reviewBucket).remove(storagePaths);
+      } catch (error, stackTrace) {
+        if (kDebugMode) {
+          debugPrint(
+            '[ReviewRepository] deleteReview cleanup failed reviewId=$reviewId error=$error stack=$stackTrace',
+          );
+        }
+      }
+    }
+
+    if (kDebugMode) {
+      debugPrint('[ReviewRepository] deleteReview reviewId=$reviewId');
+    }
+  }
+
+  String? _extractStoragePathFromUrl(String urlOrPath) {
+    if (urlOrPath.isEmpty) {
+      return null;
+    }
+
+    if (!urlOrPath.contains('://')) {
+      return urlOrPath;
+    }
+
+    final marker = '/$_reviewBucket/';
+    final index = urlOrPath.indexOf(marker);
+    if (index == -1) {
+      return null;
+    }
+
+    final start = index + marker.length;
+    if (start >= urlOrPath.length) {
+      return null;
+    }
+
+    return urlOrPath.substring(start);
   }
 }

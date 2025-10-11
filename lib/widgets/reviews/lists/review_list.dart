@@ -8,6 +8,7 @@ class ReviewList extends StatefulWidget {
   final List<String>? bodyParts;
   final String? machineType;
   final String? selectedMachineId;
+  final int refreshKey;
 
   const ReviewList({
     super.key,
@@ -15,6 +16,7 @@ class ReviewList extends StatefulWidget {
     this.bodyParts,
     this.machineType,
     this.selectedMachineId,
+    this.refreshKey = 0,
   });
 
   @override
@@ -37,13 +39,17 @@ class _ReviewListState extends State<ReviewList> {
     if (oldWidget.brandId != widget.brandId ||
         oldWidget.bodyParts != widget.bodyParts ||
         oldWidget.machineType != widget.machineType ||
-        oldWidget.selectedMachineId != widget.selectedMachineId) {
+        oldWidget.selectedMachineId != widget.selectedMachineId ||
+        oldWidget.refreshKey != widget.refreshKey) {
       fetchReviews();
     }
   }
 
   Future<void> fetchReviews() async {
     try {
+      setState(() {
+        loading = true;
+      });
       debugPrint(
         'ReviewList fetchReviews - brandId: ${widget.brandId}, bodyParts: ${widget.bodyParts}, machineId: ${widget.selectedMachineId}',
       );
@@ -97,7 +103,8 @@ class _ReviewListState extends State<ReviewList> {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: reviews.length,
       itemBuilder: (context, index) {
-        return ReviewCard(review: reviews[index]);
+        final review = reviews[index];
+        return ReviewCard(review: review, onDeleted: fetchReviews);
       },
     );
   }
