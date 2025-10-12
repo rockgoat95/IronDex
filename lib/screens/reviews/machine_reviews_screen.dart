@@ -90,6 +90,7 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
     final machineId = _machineId;
     final isFavorite = favoritesProvider.isFavorite(machineId);
     final brand = widget.machine['brand'] ?? <String, dynamic>{};
+    final brandName = (brand['name'] ?? brand['name_kor'])?.toString() ?? '';
 
     final bool showPrompt =
         _machineId != null && (!_hasUserReview || _checkingUserReview);
@@ -103,7 +104,7 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Machine Reviews'),
+        title: const Text('Reviews'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.of(context).maybePop(),
@@ -118,7 +119,7 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
               child: MachineCard(
                 name: widget.machine['name'] ?? '',
                 imageUrl: widget.machine['image_url'] ?? '',
-                brandName: brand['name'] ?? '',
+                brandName: brandName,
                 brandLogoUrl: brand['logo_url'] ?? '',
                 score: widget.machine['score'] != null
                     ? double.tryParse(widget.machine['score'].toString())

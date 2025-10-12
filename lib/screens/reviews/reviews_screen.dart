@@ -55,13 +55,19 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
   void _onSearchChanged(String value) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted) return;
       final trimmed = value.trim();
-      final nextQuery = trimmed.isEmpty ? null : trimmed;
-      if (_searchQuery != nextQuery) {
-        setState(() {
-          _searchQuery = nextQuery;
-        });
-      }
+      setState(() {
+        _searchQuery = trimmed.isEmpty ? null : trimmed;
+      });
+    });
+  }
+
+  void _onSearchSubmitted(String value) {
+    final trimmed = value.trim();
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _searchQuery = trimmed.isEmpty ? null : trimmed;
     });
   }
 
@@ -171,6 +177,7 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
     return TextField(
       controller: _searchController,
       onChanged: _onSearchChanged,
+      onSubmitted: _onSearchSubmitted,
       decoration: InputDecoration(
         hintText: '머신 또는 브랜드명을 검색하세요',
         prefixIcon: const Icon(Icons.search),

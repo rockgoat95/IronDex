@@ -16,7 +16,7 @@ class ReviewAddPromptCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -35,7 +35,7 @@ class ReviewAddPromptCard extends StatelessWidget {
                 color: theme.colorScheme.primary,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.add, color: Colors.white),
+              child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -59,7 +59,11 @@ class ReviewAddPromptCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ],
         ),
       ),

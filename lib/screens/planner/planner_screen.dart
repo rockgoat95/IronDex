@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:irondex/screens/planner/routine_editor_screen.dart';
 import 'package:irondex/widgets/planner/planner_calendar.dart';
 import 'package:irondex/widgets/planner/planner_summary_card.dart';
 import 'package:irondex/widgets/planner/routine_actions_sheet.dart';
@@ -56,7 +57,17 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => RoutineActionsSheet(targetDate: date),
+      builder: (sheetContext) => RoutineActionsSheet(
+        targetDate: date,
+        onCreateRoutine: () {
+          Navigator.of(sheetContext).pop();
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => RoutineEditorScreen(targetDate: date),
+            ),
+          );
+        },
+      ),
     );
   }
 

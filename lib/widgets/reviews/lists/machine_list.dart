@@ -217,6 +217,8 @@ class _MachineListState extends State<MachineList> {
             itemBuilder: (context, index) {
               final m = _machines[index];
               final brand = m['brand'] ?? {};
+              final brandName = (brand['name'] ?? brand['name_kor'] ?? '')
+                  .toString();
               final machineId = m['id']?.toString();
               final isFavorite = favoritesProvider.isFavorite(machineId);
 
@@ -227,7 +229,7 @@ class _MachineListState extends State<MachineList> {
                 child: MachineCard(
                   name: m['name'] ?? '',
                   imageUrl: m['image_url'] ?? '',
-                  brandName: brand['name'] ?? '',
+                  brandName: brandName,
                   brandLogoUrl: brand['logo_url'] ?? '',
                   score: m['score'] != null
                       ? double.tryParse(m['score'].toString())

@@ -38,15 +38,43 @@ class ReviewRepository {
 
     final trimmedQuery = searchQuery?.trim();
     if (trimmedQuery != null && trimmedQuery.isNotEmpty) {
-      final escaped = trimmedQuery
+      String escape(String value) => value
           .replaceAll('\\', '\\\\')
           .replaceAll('%', '\\%')
           .replaceAll('_', '\\_');
-      final pattern = '%$escaped%';
-      query = query.or('name.ilike.$pattern,brand.name.ilike.$pattern');
+
+      final escapedFull = escape(trimmedQuery);
+      final pattern = '%$escapedFull%';
+      query = query.or(
+        'name.ilike.$pattern,brand_name.ilike.$pattern,brand_name_kor.ilike.$pattern',
+      );
+
+      final tokens = trimmedQuery
+          .split(RegExp(r'\s+'))
+          .where((token) => token.isNotEmpty);
+      for (final token in tokens) {
+        if (token == trimmedQuery) {
+          continue;
+        }
+        final tokenPattern = '%${escape(token)}%';
+        query = query.or(
+          'name.ilike.$tokenPattern,brand_name.ilike.$tokenPattern,brand_name_kor.ilike.$tokenPattern',
+        );
+      }
     }
 
     return query;
+  }
+
+  Map<String, dynamic> _mapMachineRow(Map<String, dynamic> machine) {
+    final brand = <String, dynamic>{
+      'id': machine['brand_id'],
+      'name': machine['brand_name'],
+      'name_kor': machine['brand_name_kor'],
+      'logo_url': machine['brand_logo_url'],
+    }..removeWhere((_, value) => value == null);
+
+    return <String, dynamic>{...machine, if (brand.isNotEmpty) 'brand': brand};
   }
 
   Future<List<Map<String, dynamic>>> fetchBrands() async {
@@ -83,15 +111,17 @@ class ReviewRepository {
         score,
         body_parts,
         type,
-        brand:brands (
-          name,
-          logo_url
-        )
+        brand_id,
+        brand_name,
+        brand_name_kor,
+        brand_logo_url
       ''',
     );
 
     final response = await query.range(offset, offset + limit - 1);
-    final data = List<Map<String, dynamic>>.from(response);
+    final rows = List<Map<String, dynamic>>.from(response);
+    final data = rows.map(_mapMachineRow).toList();
+
     if (kDebugMode) {
       debugPrint(
         '[ReviewRepository] fetchMachines count=${data.length} '
@@ -102,6 +132,38 @@ class ReviewRepository {
       }
     }
     return data;
+  }
+
+  Future<List<Map<String, dynamic>>> searchMachines(
+    String keyword, {
+    int limit = 20,
+  }) async {
+    final trimmed = keyword.trim();
+    if (trimmed.isEmpty) {
+      return const <Map<String, dynamic>>[];
+    }
+
+    final query = _buildMachineQuery(
+      selectClause: '''
+        id,
+        name,
+        status,
+        image_url,
+        review_cnt,
+        score,
+        body_parts,
+        type,
+        brand_id,
+        brand_name,
+        brand_name_kor,
+        brand_logo_url
+      ''',
+      searchQuery: trimmed,
+    );
+
+    final response = await query.range(0, limit - 1);
+    final rows = List<Map<String, dynamic>>.from(response);
+    return rows.map(_mapMachineRow).toList();
   }
 
   Future<List<Map<String, dynamic>>> fetchMachineReviews({

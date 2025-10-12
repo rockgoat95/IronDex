@@ -36,9 +36,10 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
     super.initState();
     final machine = widget.machine;
     final brand = (machine['brand'] as Map<String, dynamic>?) ?? {};
+    final brandName = (brand['name'] ?? brand['name_kor'])?.toString();
     _selectedMachineId = machine['id']?.toString();
     _selectedMachineName = machine['name']?.toString();
-    _selectedMachineBrandName = brand['name']?.toString();
+    _selectedMachineBrandName = brandName;
     _selectedMachineImageUrl = machine['image_url']?.toString();
     _selectedMachineBrandLogoUrl = brand['logo_url']?.toString();
   }

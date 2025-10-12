@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class RoutineActionsSheet extends StatelessWidget {
-  const RoutineActionsSheet({super.key, required this.targetDate});
+  const RoutineActionsSheet({
+    super.key,
+    required this.targetDate,
+    required this.onCreateRoutine,
+  });
 
   final DateTime targetDate;
+  final VoidCallback onCreateRoutine;
 
   @override
   Widget build(BuildContext context) {
@@ -39,22 +44,13 @@ class RoutineActionsSheet extends StatelessWidget {
                 children: [
                   _RoutineActionTile(
                     icon: Icons.add_circle_outline,
-                    label: 'Create new routine',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Planning for $shortLabel will be available soon.',
-                          ),
-                        ),
-                      );
-                    },
+                    label: '새 루틴 만들기',
+                    onTap: onCreateRoutine,
                   ),
                   const SizedBox(height: 12),
                   _RoutineActionTile(
                     icon: Icons.history_rounded,
-                    label: 'Load previous routine',
+                    label: '지난 루틴 불러오기',
                     onTap: () {
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
