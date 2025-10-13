@@ -122,19 +122,17 @@ class _MachinePickerSheetState extends State<MachinePickerSheet> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: PrimaryScrollController(
+                  child: Scrollbar(
                     controller: _scrollController,
-                    child: Scrollbar(
+                    child: PrimaryScrollController(
                       controller: _scrollController,
-                      child: SingleChildScrollView(
-                        controller: _scrollController,
-                        child: MachineList(
-                          parentScrollController: _scrollController,
-                          searchQuery: _searchQuery,
-                          onMachineTap: (machine) {
-                            Navigator.of(context).pop(machine);
-                          },
-                        ),
+                      child: MachineList(
+                        parentScrollController: _scrollController,
+                        searchQuery: _searchQuery,
+                        standalone: true,
+                        onMachineTap: (machine) {
+                          Navigator.of(context).pop(machine);
+                        },
                       ),
                     ),
                   ),

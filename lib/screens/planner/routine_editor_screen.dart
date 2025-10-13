@@ -1,5 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:irondex/models/routine_exercise_draft.dart';
+import 'package:irondex/screens/planner/exercise_set_editor_screen.dart';
 import 'package:irondex/widgets/planner/exercise_type_picker_sheet.dart';
 import 'package:irondex/widgets/planner/machine_picker_sheet.dart';
 
@@ -14,7 +17,7 @@ class RoutineEditorScreen extends StatefulWidget {
 
 class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
   final TextEditingController _titleController = TextEditingController();
-  final List<_DraftRoutineExercise> _exercises = [];
+  final List<RoutineExerciseDraft> _exercises = [];
   bool _isSaving = false;
 
   @override
@@ -57,13 +60,32 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
 
     setState(() {
       _exercises.add(
-        _DraftRoutineExercise(
+        RoutineExerciseDraft(
           machineId: selectedMachine['id']?.toString() ?? '',
           machineName: selectedMachine['name']?.toString() ?? '이름 없는 머신',
           brandName: brandName,
+          brandLogoUrl: brand?['logo_url']?.toString(),
           imageUrl: selectedMachine['image_url']?.toString(),
+          sets: const [RoutineExerciseSetDraft(order: 1, isWarmup: true)],
         ),
       );
+    });
+  }
+
+  Future<void> _handleEditExercise(int index) async {
+    final exercise = _exercises[index];
+    final updated = await Navigator.of(context).push<RoutineExerciseDraft>(
+      MaterialPageRoute(
+        builder: (_) => ExerciseSetEditorScreen(exercise: exercise),
+      ),
+    );
+
+    if (!mounted || updated == null) {
+      return;
+    }
+
+    setState(() {
+      _exercises[index] = updated;
     });
   }
 
@@ -161,8 +183,8 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                         itemBuilder: (context, index) {
                           final exercise = _exercises[index];
                           return _RoutineExerciseTile(
-                            order: index + 1,
                             exercise: exercise,
+                            onTap: () => _handleEditExercise(index),
                             onRemove: () => _handleRemoveExercise(index),
                           );
                         },
@@ -182,85 +204,203 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
   }
 }
 
-class _DraftRoutineExercise {
-  _DraftRoutineExercise({
-    required this.machineId,
-    required this.machineName,
-    this.brandName,
-    this.imageUrl,
-  });
-
-  final String machineId;
-  final String machineName;
-  final String? brandName;
-  final String? imageUrl;
-}
-
 class _RoutineExerciseTile extends StatelessWidget {
   const _RoutineExerciseTile({
-    required this.order,
     required this.exercise,
+    required this.onTap,
     required this.onRemove,
   });
 
-  final int order;
-  final _DraftRoutineExercise exercise;
+  final RoutineExerciseDraft exercise;
+  final VoidCallback onTap;
   final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: theme.colorScheme.primary,
-            child: Text(
-              order.toString(),
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  exercise.machineName,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _ExerciseThumbnail(imageUrl: exercise.imageUrl),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _BrandInfo(
+                    brandLogoUrl: exercise.brandLogoUrl,
+                    brandName: exercise.brandName,
                   ),
-                ),
-                if (exercise.brandName != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      exercise.brandName!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                  const SizedBox(height: 6),
+                  Text(
+                    exercise.machineName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-              ],
+                  if (exercise.sets.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        '${exercise.sets.length}세트 구성됨',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: onRemove,
+              icon: const Icon(Icons.delete_outline),
+              tooltip: '삭제',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExerciseThumbnail extends StatelessWidget {
+  const _ExerciseThumbnail({this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    const double size = 64;
+    final placeholder = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+
+    final url = imageUrl;
+    if (url == null || url.isEmpty) {
+      return placeholder;
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: CachedNetworkImage(
+        imageUrl: url,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => Container(
+          width: size,
+          height: size,
+          alignment: Alignment.center,
+          color: Theme.of(context).colorScheme.surfaceVariant,
+          child: const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+        errorWidget: (_, __, ___) => placeholder,
+      ),
+    );
+  }
+}
+
+class _BrandInfo extends StatelessWidget {
+  const _BrandInfo({this.brandLogoUrl, this.brandName});
+
+  final String? brandLogoUrl;
+  final String? brandName;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final title = brandName?.isNotEmpty == true ? brandName! : '머신';
+
+    Widget buildLogo() {
+      const double size = 24;
+      if (brandLogoUrl == null || brandLogoUrl!.isEmpty) {
+        return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceVariant,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.fitness_center,
+            size: 14,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        );
+      }
+
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(6),
+        child: CachedNetworkImage(
+          imageUrl: brandLogoUrl!,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          placeholder: (_, __) => Container(
+            width: size,
+            height: size,
+            color: theme.colorScheme.surfaceVariant,
+          ),
+          errorWidget: (_, __, ___) => Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceVariant,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.fitness_center,
+              size: 14,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          IconButton(
-            onPressed: onRemove,
-            icon: const Icon(Icons.delete_outline),
-            tooltip: '삭제',
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        buildLogo(),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

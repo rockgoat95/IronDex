@@ -43,23 +43,20 @@ class ReviewRepository {
           .replaceAll('%', '\\%')
           .replaceAll('_', '\\_');
 
-      final escapedFull = escape(trimmedQuery);
-      final pattern = '%$escapedFull%';
-      query = query.or(
-        'name.ilike.$pattern,brand_name.ilike.$pattern,brand_name_kor.ilike.$pattern',
-      );
-
       final tokens = trimmedQuery
           .split(RegExp(r'\s+'))
-          .where((token) => token.isNotEmpty);
-      for (final token in tokens) {
-        if (token == trimmedQuery) {
-          continue;
+          .where((token) => token.isNotEmpty)
+          .toList();
+
+      if (tokens.length <= 1) {
+        final pattern = '%${escape(trimmedQuery)}%';
+        query = query.ilike('search_text', pattern);
+      } else {
+        final uniqueTokens = tokens.toSet();
+        for (final token in uniqueTokens) {
+          final tokenPattern = '%${escape(token)}%';
+          query = query.ilike('search_text', tokenPattern);
         }
-        final tokenPattern = '%${escape(token)}%';
-        query = query.or(
-          'name.ilike.$tokenPattern,brand_name.ilike.$tokenPattern,brand_name_kor.ilike.$tokenPattern',
-        );
       }
     }
 

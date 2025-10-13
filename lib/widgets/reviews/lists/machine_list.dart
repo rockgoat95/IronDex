@@ -6,13 +6,6 @@ import 'package:irondex/widgets/reviews/cards/machine_card.dart';
 import 'package:provider/provider.dart';
 
 class MachineList extends StatefulWidget {
-  final String? brandId;
-  final List<String>? bodyParts;
-  final String? machineType;
-  final String? searchQuery;
-  final ValueChanged<Map<String, dynamic>>? onMachineTap;
-  final ScrollController? parentScrollController;
-
   const MachineList({
     super.key,
     this.brandId,
@@ -21,7 +14,16 @@ class MachineList extends StatefulWidget {
     this.searchQuery,
     this.onMachineTap,
     this.parentScrollController,
+    this.standalone = false,
   });
+
+  final String? brandId;
+  final List<String>? bodyParts;
+  final String? machineType;
+  final String? searchQuery;
+  final ValueChanged<Map<String, dynamic>>? onMachineTap;
+  final ScrollController? parentScrollController;
+  final bool standalone;
 
   @override
   State<MachineList> createState() => _MachineListState();
@@ -36,10 +38,14 @@ class _MachineListState extends State<MachineList> {
   bool _hasMore = true;
   int _offset = 0;
   ScrollController? _attachedScrollController;
+  ScrollController? _ownedScrollController;
 
   @override
   void initState() {
     super.initState();
+    if (widget.standalone) {
+      _initializeStandaloneController(widget.parentScrollController);
+    }
     _loadMachines(reset: true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -50,6 +56,9 @@ class _MachineListState extends State<MachineList> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (widget.standalone) {
+      return;
+    }
     _attachScrollController(
       widget.parentScrollController ?? PrimaryScrollController.maybeOf(context),
     );
@@ -58,14 +67,20 @@ class _MachineListState extends State<MachineList> {
   @override
   void didUpdateWidget(MachineList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.parentScrollController != widget.parentScrollController) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _attachScrollController(
-          widget.parentScrollController ??
-              PrimaryScrollController.maybeOf(context),
-        );
-      });
+    if (widget.standalone) {
+      if (oldWidget.parentScrollController != widget.parentScrollController) {
+        _initializeStandaloneController(widget.parentScrollController);
+      }
+    } else {
+      if (oldWidget.parentScrollController != widget.parentScrollController) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _attachScrollController(
+            widget.parentScrollController ??
+                PrimaryScrollController.maybeOf(context),
+          );
+        });
+      }
     }
     if (oldWidget.brandId != widget.brandId ||
         oldWidget.bodyParts != widget.bodyParts ||
@@ -81,7 +96,22 @@ class _MachineListState extends State<MachineList> {
     super.dispose();
   }
 
+  void _initializeStandaloneController(ScrollController? controller) {
+    _detachScrollController();
+    if (controller != null) {
+      _attachedScrollController = controller;
+      _attachedScrollController?.addListener(_handleScroll);
+    } else {
+      _ownedScrollController = ScrollController();
+      _ownedScrollController!.addListener(_handleScroll);
+      _attachedScrollController = _ownedScrollController;
+    }
+  }
+
   void _attachScrollController(ScrollController? controller) {
+    if (widget.standalone) {
+      return;
+    }
     if (controller == _attachedScrollController) {
       return;
     }
@@ -93,6 +123,10 @@ class _MachineListState extends State<MachineList> {
 
   void _detachScrollController() {
     _attachedScrollController?.removeListener(_handleScroll);
+    if (_ownedScrollController != null) {
+      _ownedScrollController!.dispose();
+      _ownedScrollController = null;
+    }
     _attachedScrollController = null;
   }
 
@@ -194,6 +228,40 @@ class _MachineListState extends State<MachineList> {
       );
     }
 
+    if (widget.standalone) {
+      return CustomScrollView(
+        controller: _attachedScrollController,
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.only(bottom: 16),
+            sliver: SliverGrid(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final m = _machines[index];
+                return _MachineTile(
+                  machine: m,
+                  favoritesProvider: favoritesProvider,
+                  onTap: widget.onMachineTap,
+                );
+              }, childCount: _machines.length),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 0.7,
+              ),
+            ),
+          ),
+          if (_isLoadingMore)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ),
+        ],
+      );
+    }
+
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         _maybeLoadMore(
@@ -216,48 +284,10 @@ class _MachineListState extends State<MachineList> {
             ),
             itemBuilder: (context, index) {
               final m = _machines[index];
-              final brand = m['brand'] ?? {};
-              final brandName = (brand['name'] ?? brand['name_kor'] ?? '')
-                  .toString();
-              final machineId = m['id']?.toString();
-              final isFavorite = favoritesProvider.isFavorite(machineId);
-
-              return GestureDetector(
-                onTap: () {
-                  widget.onMachineTap?.call(m);
-                },
-                child: MachineCard(
-                  name: m['name'] ?? '',
-                  imageUrl: m['image_url'] ?? '',
-                  brandName: brandName,
-                  brandLogoUrl: brand['logo_url'] ?? '',
-                  score: m['score'] != null
-                      ? double.tryParse(m['score'].toString())
-                      : null,
-                  reviewCnt: m['review_cnt'] is int
-                      ? m['review_cnt'] as int
-                      : 0,
-                  isFavorite: isFavorite,
-                  onFavoriteToggle: machineId == null
-                      ? null
-                      : () async {
-                          try {
-                            await favoritesProvider.toggleFavorite(machineId);
-                          } on StateError {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('로그인 후 이용해주세요.')),
-                            );
-                          } catch (error) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('찜 처리 중 오류가 발생했습니다.'),
-                              ),
-                            );
-                          }
-                        },
-                ),
+              return _MachineTile(
+                machine: m,
+                favoritesProvider: favoritesProvider,
+                onTap: widget.onMachineTap,
               );
             },
           ),
@@ -267,6 +297,60 @@ class _MachineListState extends State<MachineList> {
               child: CircularProgressIndicator(),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _MachineTile extends StatelessWidget {
+  const _MachineTile({
+    required this.machine,
+    required this.favoritesProvider,
+    required this.onTap,
+  });
+
+  final Map<String, dynamic> machine;
+  final MachineFavoriteProvider favoritesProvider;
+  final ValueChanged<Map<String, dynamic>>? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = machine['brand'] ?? {};
+    final brandName = (brand['name'] ?? brand['name_kor'] ?? '').toString();
+    final machineId = machine['id']?.toString();
+    final isFavorite = favoritesProvider.isFavorite(machineId);
+
+    return GestureDetector(
+      onTap: () => onTap?.call(machine),
+      child: MachineCard(
+        name: machine['name'] ?? '',
+        imageUrl: machine['image_url'] ?? '',
+        brandName: brandName,
+        brandLogoUrl: brand['logo_url'] ?? '',
+        score: machine['score'] != null
+            ? double.tryParse(machine['score'].toString())
+            : null,
+        reviewCnt: machine['review_cnt'] is int
+            ? machine['review_cnt'] as int
+            : 0,
+        isFavorite: isFavorite,
+        onFavoriteToggle: machineId == null
+            ? null
+            : () async {
+                try {
+                  await favoritesProvider.toggleFavorite(machineId);
+                } on StateError {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('로그인 후 이용해주세요.')),
+                  );
+                } catch (error) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('찜 처리 중 오류가 발생했습니다.')),
+                  );
+                }
+              },
       ),
     );
   }
