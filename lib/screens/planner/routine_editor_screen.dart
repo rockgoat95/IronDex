@@ -66,7 +66,12 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
           brandName: brandName,
           brandLogoUrl: brand?['logo_url']?.toString(),
           imageUrl: selectedMachine['image_url']?.toString(),
-          sets: const [RoutineExerciseSetDraft(order: 1, isWarmup: true)],
+          sets: const [
+            RoutineExerciseSetDraft(
+              order: 1,
+              type: RoutineExerciseSetType.warmup,
+            ),
+          ],
         ),
       );
     });
@@ -253,7 +258,7 @@ class _RoutineExerciseTile extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(
-                        '${exercise.sets.length}세트 구성됨',
+                        '${exercise.sets.length}개의 세트 정보',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),

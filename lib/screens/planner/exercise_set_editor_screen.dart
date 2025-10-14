@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:irondex/models/routine_exercise_draft.dart';
 
-const double _columnSpacing = 12;
+const double _columnSpacing = 8;
 
 class ExerciseSetEditorScreen extends StatefulWidget {
   const ExerciseSetEditorScreen({super.key, required this.exercise});
@@ -22,7 +22,12 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
     super.initState();
     final initialSets = widget.exercise.sets.isNotEmpty
         ? widget.exercise.sets
-        : const [RoutineExerciseSetDraft(order: 1, isWarmup: true)];
+        : const [
+            RoutineExerciseSetDraft(
+              order: 1,
+              type: RoutineExerciseSetType.warmup,
+            ),
+          ];
     _entries = initialSets
         .map((set) => _SetFormEntry(set: set))
         .toList(growable: true);
@@ -36,13 +41,12 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
     super.dispose();
   }
 
-  void _insertSetAfter(int index) {
+  void _addSet() {
     setState(() {
-      final newEntry = _SetFormEntry(
-        set: RoutineExerciseSetDraft(order: _entries.length + 1),
+      final nextOrder = _entries.length + 1;
+      _entries.add(
+        _SetFormEntry(set: RoutineExerciseSetDraft(order: nextOrder)),
       );
-      _entries.insert(index + 1, newEntry);
-      _renumberSets();
     });
   }
 
@@ -56,17 +60,49 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
     });
   }
 
-  void _toggleWarmup(int index) {
-    setState(() {
-      final entry = _entries[index];
-      entry.set = entry.set.copyWith(isWarmup: !entry.set.isWarmup);
-    });
+  void _removeLastSet() {
+    _removeSet(_entries.length - 1);
   }
 
   void _toggleCompleted(int index) {
     setState(() {
       final entry = _entries[index];
       entry.set = entry.set.copyWith(isCompleted: !entry.set.isCompleted);
+    });
+  }
+
+  int _mainSetNumberFor(int index) {
+    var count = 0;
+    for (var i = 0; i <= index; i++) {
+      if (_entries[i].set.isMain) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  String _labelForSet(int index) {
+    final entry = _entries[index];
+    if (entry.set.isMain) {
+      final sequence = _mainSetNumberFor(index);
+      return sequence.toString();
+    }
+    final shortLabel = entry.set.type.shortLabel;
+    return shortLabel.isNotEmpty ? shortLabel : '-';
+  }
+
+  Future<void> _selectSetType(int index) async {
+    final currentType = _entries[index].set.type;
+    final selectedType = await showModalBottomSheet<RoutineExerciseSetType>(
+      context: context,
+      builder: (context) => _SetTypePicker(currentType: currentType),
+    );
+    if (!mounted || selectedType == null || selectedType == currentType) {
+      return;
+    }
+    setState(() {
+      final entry = _entries[index];
+      entry.set = entry.set.copyWith(type: selectedType);
     });
   }
 
@@ -96,6 +132,7 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
       appBar: AppBar(
         title: const Text('세트 편집'),
@@ -109,22 +146,32 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
             _SetTableHeader(theme: theme),
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  (bottomInset > 0 ? bottomInset : 0) + 24,
                 ),
                 itemBuilder: (context, index) {
+                  if (index == _entries.length) {
+                    return _SetControlsRow(
+                      onAdd: _addSet,
+                      onRemove: _entries.length > 1 ? _removeLastSet : null,
+                    );
+                  }
+                  final entry = _entries[index];
+                  final displayLabel = _labelForSet(index);
+                  final chipColor = _chipColorForSetType(entry.set.type, theme);
                   return _SetRow(
-                    index: index,
-                    entry: _entries[index],
-                    onWarmupToggle: () => _toggleWarmup(index),
+                    entry: entry,
+                    displayLabel: displayLabel,
+                    labelColor: chipColor,
+                    onTypeTap: () => _selectSetType(index),
                     onCompletedToggle: () => _toggleCompleted(index),
-                    onRemove: () => _removeSet(index),
-                    onInsertAfter: () => _insertSetAfter(index),
                   );
                 },
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemCount: _entries.length,
+                itemCount: _entries.length + 1,
               ),
             ),
           ],
@@ -191,7 +238,11 @@ class _SetTableHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
           children: [
             Expanded(
@@ -200,51 +251,51 @@ class _SetTableHeader extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Text(
                   '세트',
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ),
             const SizedBox(width: _columnSpacing),
             Expanded(
-              flex: 4,
+              flex: 3,
               child: Align(
                 alignment: Alignment.center,
                 child: Text(
-                  'KG',
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  '키로',
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ),
             const SizedBox(width: _columnSpacing),
             Expanded(
-              flex: 4,
+              flex: 3,
               child: Align(
                 alignment: Alignment.center,
                 child: Text(
                   '회',
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ),
             const SizedBox(width: _columnSpacing),
             Expanded(
-              flex: 5,
+              flex: 4,
               child: Align(
                 alignment: Alignment.center,
                 child: Text(
                   '완료',
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -258,35 +309,29 @@ class _SetTableHeader extends StatelessWidget {
 
 class _SetRow extends StatelessWidget {
   const _SetRow({
-    required this.index,
     required this.entry,
-    required this.onWarmupToggle,
+    required this.displayLabel,
+    required this.labelColor,
+    required this.onTypeTap,
     required this.onCompletedToggle,
-    required this.onRemove,
-    required this.onInsertAfter,
   });
 
-  final int index;
   final _SetFormEntry entry;
-  final VoidCallback onWarmupToggle;
+  final String displayLabel;
+  final Color labelColor;
+  final VoidCallback onTypeTap;
   final VoidCallback onCompletedToggle;
-  final VoidCallback onRemove;
-  final VoidCallback onInsertAfter;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final warmupLabel = entry.set.isWarmup ? 'W' : (index + 1).toString();
-    final warmupColor = entry.set.isWarmup
-        ? theme.colorScheme.error
-        : theme.colorScheme.onSurface;
 
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(14),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
       child: Row(
         children: [
           Expanded(
@@ -294,57 +339,42 @@ class _SetRow extends StatelessWidget {
             child: Align(
               alignment: Alignment.center,
               child: _SetChip(
-                label: warmupLabel,
-                color: warmupColor,
-                onTap: onWarmupToggle,
+                label: displayLabel,
+                color: labelColor,
+                onTap: onTypeTap,
               ),
             ),
           ),
           const SizedBox(width: _columnSpacing),
           Expanded(
-            flex: 4,
-            child: _NumericField(
-              controller: entry.weightController,
-              hintText: 'KG',
-            ),
-          ),
-          const SizedBox(width: _columnSpacing),
-          Expanded(
-            flex: 4,
-            child: _NumericField(
-              controller: entry.repsController,
-              hintText: '횟수',
-            ),
-          ),
-          const SizedBox(width: _columnSpacing),
-          Expanded(
-            flex: 5,
+            flex: 3,
             child: Align(
               alignment: Alignment.center,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _CompletionButton(
-                    isCompleted: entry.set.isCompleted,
-                    onTap: onCompletedToggle,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.add_circle_outline),
-                        tooltip: '세트 추가',
-                        onPressed: onInsertAfter,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        tooltip: '세트 삭제',
-                        onPressed: onRemove,
-                      ),
-                    ],
-                  ),
-                ],
+              child: _NumericField(
+                controller: entry.weightController,
+                hintText: 'KG',
+              ),
+            ),
+          ),
+          const SizedBox(width: _columnSpacing),
+          Expanded(
+            flex: 3,
+            child: Align(
+              alignment: Alignment.center,
+              child: _NumericField(
+                controller: entry.repsController,
+                hintText: '회',
+              ),
+            ),
+          ),
+          const SizedBox(width: _columnSpacing),
+          Flexible(
+            flex: 4,
+            child: Align(
+              alignment: Alignment.center,
+              child: _CompletionButton(
+                isCompleted: entry.set.isCompleted,
+                onTap: onCompletedToggle,
               ),
             ),
           ),
@@ -374,7 +404,8 @@ class _NumericField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       ),
     );
   }
@@ -396,8 +427,8 @@ class _SetChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 48,
-        height: 44,
+        width: 40,
+        height: 38,
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
@@ -428,8 +459,8 @@ class _CompletionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 48,
-        height: 44,
+        width: 40,
+        height: 38,
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
@@ -440,6 +471,142 @@ class _CompletionButton extends StatelessWidget {
           color: isCompleted
               ? theme.colorScheme.primary
               : theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+class _SetControlsRow extends StatelessWidget {
+  const _SetControlsRow({required this.onAdd, required this.onRemove});
+
+  final VoidCallback onAdd;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FilledButton.icon(
+            onPressed: onAdd,
+            style: FilledButton.styleFrom(minimumSize: const Size(112, 44)),
+            icon: const Icon(Icons.add),
+            label: const Text('세트 추가'),
+          ),
+          const SizedBox(width: 12),
+          OutlinedButton.icon(
+            onPressed: onRemove,
+            style: OutlinedButton.styleFrom(minimumSize: const Size(112, 44)),
+            icon: const Icon(Icons.remove),
+            label: const Text('세트 제거'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Color _chipColorForSetType(RoutineExerciseSetType type, ThemeData theme) {
+  switch (type) {
+    case RoutineExerciseSetType.warmup:
+      return theme.colorScheme.tertiary;
+    case RoutineExerciseSetType.drop:
+      return theme.colorScheme.primary;
+    case RoutineExerciseSetType.fail:
+      return theme.colorScheme.error;
+    case RoutineExerciseSetType.main:
+      return theme.colorScheme.onSurface;
+  }
+}
+
+String _typeSubtitle(RoutineExerciseSetType type) {
+  switch (type) {
+    case RoutineExerciseSetType.warmup:
+      return '화면에서는 W로 표시됩니다';
+    case RoutineExerciseSetType.drop:
+      return '화면에서는 D로 표시됩니다';
+    case RoutineExerciseSetType.fail:
+      return '화면에서는 F로 표시됩니다';
+    case RoutineExerciseSetType.main:
+      return '화면에서는 1, 2, 3처럼 표시됩니다';
+  }
+}
+
+class _SetTypePicker extends StatelessWidget {
+  const _SetTypePicker({required this.currentType});
+
+  final RoutineExerciseSetType currentType;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              '세트 유형 선택',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            for (final type in RoutineExerciseSetType.values) ...[
+              ListTile(
+                onTap: () => Navigator.of(context).pop(type),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                leading: _TypeBadge(
+                  label: type == RoutineExerciseSetType.main
+                      ? '#'
+                      : type.shortLabel,
+                  color: _chipColorForSetType(type, theme),
+                ),
+                title: Text(type.displayName),
+                subtitle: Text(_typeSubtitle(type)),
+                trailing: type == currentType
+                    ? Icon(Icons.check, color: theme.colorScheme.primary)
+                    : null,
+              ),
+              if (type != RoutineExerciseSetType.values.last)
+                const Divider(height: 0),
+            ],
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TypeBadge extends StatelessWidget {
+  const _TypeBadge({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: color,
         ),
       ),
     );
@@ -555,7 +722,7 @@ class _BrandInfo extends StatelessWidget {
           imageUrl: brandLogoUrl!,
           width: size,
           height: size,
-          fit: BoxFit.cover,
+          fit: BoxFit.contain,
           placeholder: (_, __) => Container(
             width: size,
             height: size,
