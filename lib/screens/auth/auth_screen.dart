@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:irondex/providers/auth_provider.dart';
+import 'package:irondex/widgets/oauth_login_buttons.dart';
 import 'package:provider/provider.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -22,43 +23,87 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('IronDex 로그인')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              InkWell(
-                onTap: () => _handleSignIn(
-                  () => context.read<AuthProvider>().signInWithGoogle(),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
                 ),
-                child: Image.asset(
-                  'assets/auth/google_login_icon.png',
-                  height: 52,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      '환영합니다',
+                      textAlign: TextAlign.center,
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '간편하게 로그인하세요',
+                      textAlign: TextAlign.center,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    OAuthLoginButtons(
+                      onKakao: () => _handleSignIn(
+                        () => context.read<AuthProvider>().signInWithKakao(),
+                      ),
+                      onNaver: () => _handleSignIn(
+                        () => context.read<AuthProvider>().signInWithNaver(),
+                      ),
+                      onGoogle: () => _handleSignIn(
+                        () => context.read<AuthProvider>().signInWithGoogle(),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              InkWell(
-                onTap: () => _handleSignIn(
-                  () => context.read<AuthProvider>().signInWithKakao(),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+              child: Text.rich(
+                TextSpan(
+                  text: '로그인 시 ',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade600,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: '이용약관',
+                      style: const TextStyle(
+                        decoration: TextDecoration.underline,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const TextSpan(text: ' 및 '),
+                    TextSpan(
+                      text: '개인정보처리방침',
+                      style: const TextStyle(
+                        decoration: TextDecoration.underline,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const TextSpan(text: '에 동의하게 됩니다.'),
+                  ],
                 ),
-                child: Image.asset(
-                  'assets/auth/kakao_login_icon.png',
-                  height: 52,
-                ),
+                textAlign: TextAlign.center,
               ),
-              InkWell(
-                onTap: () => _handleSignIn(
-                  () => context.read<AuthProvider>().signInWithNaver(),
-                ),
-                child: Image.asset(
-                  'assets/auth/naver_login_icon.png',
-                  height: 52,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
