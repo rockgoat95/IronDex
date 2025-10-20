@@ -1,10 +1,14 @@
-import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:irondex/models/planner_routine.dart';
 import 'package:irondex/models/routine_exercise_draft.dart';
 import 'package:irondex/screens/planner/exercise_set_editor_screen.dart';
+import 'package:irondex/services/planner_repository.dart';
 import 'package:irondex/widgets/planner/exercise_type_picker_sheet.dart';
 import 'package:irondex/widgets/planner/machine_picker_sheet.dart';
+import 'package:irondex/widgets/planner/machine_summary_card.dart';
 
 class RoutineEditorScreen extends StatefulWidget {
   const RoutineEditorScreen({super.key, required this.targetDate});
@@ -18,15 +22,204 @@ class RoutineEditorScreen extends StatefulWidget {
 class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
   final TextEditingController _titleController = TextEditingController();
   final List<RoutineExerciseDraft> _exercises = [];
-  bool _isSaving = false;
+  final PlannerRepository _plannerRepository = PlannerRepository();
+
+  Timer? _autoSaveDebounce;
+  int? _workoutId;
+  PlannerRoutineStatus _status = PlannerRoutineStatus.draft;
+  bool _isLoading = true;
+  bool _autoSaveInProgress = false;
+  bool _hasPendingChanges = false;
+  bool _isHydrating = true;
+  String? _loadError;
+  bool _shouldNotifySaveOnExit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController.addListener(_handleTitleChanged);
+    _loadRoutine();
+  }
 
   @override
   void dispose() {
+    _autoSaveDebounce?.cancel();
+    _titleController.removeListener(_handleTitleChanged);
     _titleController.dispose();
     super.dispose();
   }
 
+  Future<void> _loadRoutine() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+      _isHydrating = true;
+    });
+
+    try {
+      final routine = await _plannerRepository.fetchRoutine(widget.targetDate);
+      if (!mounted) return;
+
+      if (routine != null) {
+        _titleController.text = routine.name ?? '';
+        setState(() {
+          _workoutId = routine.id;
+          _status = routine.status;
+          _exercises
+            ..clear()
+            ..addAll(routine.exercises);
+          _hasPendingChanges = false;
+        });
+      } else {
+        _titleController.clear();
+        setState(() {
+          _workoutId = null;
+          _status = PlannerRoutineStatus.draft;
+          _exercises.clear();
+          _hasPendingChanges = false;
+        });
+      }
+    } on PlannerRepositoryException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = error.message;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error, stackTrace) {
+      debugPrint('[RoutineEditor] loadRoutine error=$error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      setState(() {
+        _loadError = '루틴 정보를 불러오지 못했습니다.';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('루틴 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isHydrating = false;
+        });
+      }
+    }
+  }
+
+  void _handleTitleChanged() {
+    if (_isHydrating) {
+      return;
+    }
+    _markContentDirty();
+  }
+
+  void _markContentDirty() {
+    if (_isLoading) {
+      return;
+    }
+
+    final shouldResetStatus = _status == PlannerRoutineStatus.completed;
+    if (!shouldResetStatus && _hasPendingChanges) {
+      _scheduleAutoSave();
+      return;
+    }
+
+    setState(() {
+      if (shouldResetStatus) {
+        _status = PlannerRoutineStatus.draft;
+      }
+      _hasPendingChanges = true;
+    });
+    _scheduleAutoSave();
+  }
+
+  void _scheduleAutoSave() {
+    _autoSaveDebounce?.cancel();
+    _autoSaveDebounce = Timer(const Duration(milliseconds: 750), () {
+      _autoSaveDebounce = null;
+      _saveRoutine(isAuto: true);
+    });
+  }
+
+  Future<void> _saveRoutine({required bool isAuto}) async {
+    if (_isLoading) {
+      return;
+    }
+
+    if (isAuto && !_hasPendingChanges) {
+      return;
+    }
+
+    final trimmedTitle = _titleController.text.trim();
+    final nextStatus = _status;
+
+    setState(() {
+      if (isAuto) {
+        _autoSaveInProgress = true;
+      }
+      _loadError = null;
+    });
+
+    try {
+      final saved = await _plannerRepository.saveRoutineDraft(
+        workoutId: _workoutId,
+        date: widget.targetDate,
+        name: trimmedTitle.isEmpty ? null : trimmedTitle,
+        exercises: List<RoutineExerciseDraft>.from(_exercises),
+        status: nextStatus,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _workoutId = saved.id;
+        _status = saved.status;
+        _hasPendingChanges = false;
+      });
+
+      if (!isAuto) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('변경 사항이 저장되었습니다.')));
+      }
+    } on PlannerRepositoryException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _loadError = error.message;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error, stackTrace) {
+      debugPrint('[RoutineEditor] saveRoutine error=$error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('루틴 저장 중 문제가 발생했습니다. 다시 시도해주세요.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          if (isAuto) {
+            _autoSaveInProgress = false;
+          }
+        });
+      }
+    }
+  }
+
   Future<void> _handleAddExercise() async {
+    if (_isLoading) {
+      return;
+    }
+
     final type = await showModalBottomSheet<RoutineExerciseSource>(
       context: context,
       builder: (_) => const ExerciseTypePickerSheet(),
@@ -75,6 +268,8 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
         ),
       );
     });
+
+    _markContentDirty();
   }
 
   Future<void> _handleEditExercise(int index) async {
@@ -92,320 +287,189 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
     setState(() {
       _exercises[index] = updated;
     });
+    _markContentDirty();
   }
 
   void _handleRemoveExercise(int index) {
     setState(() {
       _exercises.removeAt(index);
     });
+    _markContentDirty();
   }
 
-  Future<void> _handleSaveRoutine() async {
-    final title = _titleController.text.trim();
+  Future<bool> _handleWillPop() async {
+    _autoSaveDebounce?.cancel();
 
-    if (title.isEmpty) {
+    if (_autoSaveInProgress) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('루틴 제목을 입력해주세요.')));
-      return;
+      ).showSnackBar(const SnackBar(content: Text('저장 중입니다. 잠시만 기다려주세요.')));
+      return false;
     }
 
-    if (_exercises.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('최소 한 개 이상의 운동을 추가해주세요.')));
-      return;
+    final hadPendingChanges = _hasPendingChanges;
+    if (hadPendingChanges) {
+      await _saveRoutine(isAuto: true);
+      if (_hasPendingChanges) {
+        return false;
+      }
     }
-
-    setState(() {
-      _isSaving = true;
-    });
-
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _isSaving = false;
-    });
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('루틴 저장 기능은 곧 제공될 예정입니다.')));
+    _shouldNotifySaveOnExit = hadPendingChanges && !_hasPendingChanges;
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate = DateFormat(
-      'yyyy년 M월 d일 (E)',
-      'ko_KR',
-    ).format(widget.targetDate);
+    final theme = Theme.of(context);
+    final formattedDate = DateFormat('yyyy-MM-dd').format(widget.targetDate);
+    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
+    final appBarTitleStyle =
+        theme.appBarTheme.titleTextStyle ?? theme.textTheme.titleLarge;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) {
+          return;
+        }
+        final navigator = Navigator.of(context);
+        final shouldPop = await _handleWillPop();
+        if (shouldPop && mounted) {
+          final exitResult = _shouldNotifySaveOnExit ? true : result;
+          _shouldNotifySaveOnExit = false;
+          navigator.pop(exitResult);
+        }
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        appBar: AppBar(
+          title: Text(
+            'Routine $formattedDate',
+            style: appBarTitleStyle?.copyWith(fontSize: 18),
+          ),
+        ),
+        body: SafeArea(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () => FocusScope.of(context).unfocus(),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (_loadError != null)
+                              _ErrorBanner(message: _loadError!),
+                            if (_loadError != null) const SizedBox(height: 12),
+                            TextField(
+                              controller: _titleController,
+                              enabled: !_isLoading,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 15,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: '루틴 제목',
+                                hintText: '예: 하체 머신 루틴',
+                                border: const OutlineInputBorder(),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 14,
+                                ),
+                                labelStyle: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: 13,
+                                ),
+                                hintStyle: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: 13,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Expanded(
+                              child: _exercises.isEmpty
+                                  ? const _RoutineEmptyState()
+                                  : ListView.separated(
+                                      itemCount: _exercises.length,
+                                      separatorBuilder: (_, __) =>
+                                          const SizedBox(height: 12),
+                                      itemBuilder: (context, index) {
+                                        final exercise = _exercises[index];
+                                        return MachineSummaryCard(
+                                          exercise: exercise,
+                                          onTap: () =>
+                                              _handleEditExercise(index),
+                                          trailing: IconButton(
+                                            onPressed: () =>
+                                                _handleRemoveExercise(index),
+                                            icon: const Icon(
+                                              Icons.delete_outline,
+                                            ),
+                                            tooltip: '삭제',
+                                          ),
+                                          showSetCount: true,
+                                        );
+                                      },
+                                    ),
+                            ),
+                          ],
+                        ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                  child: AnimatedPadding(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    padding: EdgeInsets.only(bottom: keyboardInset),
+                    child: FilledButton.icon(
+                      onPressed: (_autoSaveInProgress || _isLoading)
+                          ? null
+                          : _handleAddExercise,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Exercise'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('새 루틴 만들기'),
-        actions: [
-          TextButton(
-            onPressed: _isSaving ? null : _handleSaveRoutine,
-            child: _isSaving
-                ? const SizedBox(
-                    height: 16,
-                    width: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('저장'),
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: theme.colorScheme.error),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onErrorContainer,
+              ),
+            ),
           ),
         ],
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                formattedDate,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: '루틴 제목',
-                  hintText: '예: 하체 머신 루틴',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: _exercises.isEmpty
-                    ? const _RoutineEmptyState()
-                    : ListView.separated(
-                        itemCount: _exercises.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final exercise = _exercises[index];
-                          return _RoutineExerciseTile(
-                            exercise: exercise,
-                            onTap: () => _handleEditExercise(index),
-                            onRemove: () => _handleRemoveExercise(index),
-                          );
-                        },
-                      ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: _isSaving ? null : _handleAddExercise,
-                icon: const Icon(Icons.add),
-                label: const Text('운동 추가'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RoutineExerciseTile extends StatelessWidget {
-  const _RoutineExerciseTile({
-    required this.exercise,
-    required this.onTap,
-    required this.onRemove,
-  });
-
-  final RoutineExerciseDraft exercise;
-  final VoidCallback onTap;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _ExerciseThumbnail(imageUrl: exercise.imageUrl),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _BrandInfo(
-                    brandLogoUrl: exercise.brandLogoUrl,
-                    brandName: exercise.brandName,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    exercise.machineName,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (exercise.sets.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Text(
-                        '${exercise.sets.length}개의 세트 정보',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            IconButton(
-              onPressed: onRemove,
-              icon: const Icon(Icons.delete_outline),
-              tooltip: '삭제',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ExerciseThumbnail extends StatelessWidget {
-  const _ExerciseThumbnail({this.imageUrl});
-
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    const double size = 64;
-    final placeholder = Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      alignment: Alignment.center,
-      child: Icon(
-        Icons.image_not_supported_outlined,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-    );
-
-    final url = imageUrl;
-    if (url == null || url.isEmpty) {
-      return placeholder;
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: CachedNetworkImage(
-        imageUrl: url,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => Container(
-          width: size,
-          height: size,
-          alignment: Alignment.center,
-          color: Theme.of(context).colorScheme.surfaceVariant,
-          child: const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-        errorWidget: (_, __, ___) => placeholder,
-      ),
-    );
-  }
-}
-
-class _BrandInfo extends StatelessWidget {
-  const _BrandInfo({this.brandLogoUrl, this.brandName});
-
-  final String? brandLogoUrl;
-  final String? brandName;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final title = brandName?.isNotEmpty == true ? brandName! : '머신';
-
-    Widget buildLogo() {
-      const double size = 24;
-      if (brandLogoUrl == null || brandLogoUrl!.isEmpty) {
-        return Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          alignment: Alignment.center,
-          child: Icon(
-            Icons.fitness_center,
-            size: 14,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        );
-      }
-
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: CachedNetworkImage(
-          imageUrl: brandLogoUrl!,
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          placeholder: (_, __) => Container(
-            width: size,
-            height: size,
-            color: theme.colorScheme.surfaceVariant,
-          ),
-          errorWidget: (_, __, ___) => Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.fitness_center,
-              size: 14,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        buildLogo(),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

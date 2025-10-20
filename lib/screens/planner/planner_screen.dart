@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:irondex/screens/planner/routine_editor_screen.dart';
+import 'package:irondex/services/planner_repository.dart';
 import 'package:irondex/widgets/planner/planner_calendar.dart';
 import 'package:irondex/widgets/planner/planner_summary_card.dart';
 import 'package:irondex/widgets/planner/routine_actions_sheet.dart';
@@ -23,6 +25,7 @@ class _PlannerScreenBody extends StatefulWidget {
 }
 
 class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
+  final PlannerRepository _plannerRepository = PlannerRepository();
   DateTime _selectedDate = _stripTime(DateTime.now());
   late DateTime _focusedMonth = DateTime(
     _selectedDate.year,
@@ -30,7 +33,7 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
   );
   bool _skipNextAutoSelection = false;
 
-  void _handleDateSelected(DateTime date) {
+  Future<void> _handleDateSelected(DateTime date) async {
     if (_skipNextAutoSelection) {
       _skipNextAutoSelection = false;
       return;
@@ -48,10 +51,34 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
       _selectedDate = next;
       _focusedMonth = DateTime(next.year, next.month);
     });
-    _showRoutineActions(context, next);
+    bool hasIncomplete = false;
+    try {
+      hasIncomplete = await _plannerRepository.hasIncompleteRoutine(next);
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('[PlannerScreen] hasIncompleteRoutine error=$error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    if (hasIncomplete) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('완료되지 않은 루틴이 있습니다. 이어서 작성해보세요.')),
+      );
+    }
+
+    _showRoutineActions(context, next, hasIncomplete: hasIncomplete);
   }
 
-  void _showRoutineActions(BuildContext context, DateTime date) {
+  void _showRoutineActions(
+    BuildContext context,
+    DateTime date, {
+    required bool hasIncomplete,
+  }) {
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -59,16 +86,51 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
       ),
       builder: (sheetContext) => RoutineActionsSheet(
         targetDate: date,
-        onCreateRoutine: () {
+        hasIncompleteDraft: hasIncomplete,
+        onCreateRoutine: () async {
           Navigator.of(sheetContext).pop();
-          Navigator.of(context).push(
+          final result = await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => RoutineEditorScreen(targetDate: date),
             ),
           );
+          if (!mounted) {
+            return;
+          }
+          if (result == true) {
+            _showRoutineSavedBanner();
+          }
         },
       ),
     );
+  }
+
+  void _showRoutineSavedBanner() {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentMaterialBanner();
+    final theme = Theme.of(context);
+    messenger.showMaterialBanner(
+      MaterialBanner(
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+        leading: Icon(
+          Icons.check_circle_outline,
+          color: theme.colorScheme.primary,
+        ),
+        content: Text('변경 사항이 저장되었습니다.', style: theme.textTheme.bodyMedium),
+        actions: [
+          TextButton(
+            onPressed: messenger.hideCurrentMaterialBanner,
+            child: const Text('닫기'),
+          ),
+        ],
+      ),
+    );
+
+    Future<void>.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        messenger.hideCurrentMaterialBanner();
+      }
+    });
   }
 
   @override

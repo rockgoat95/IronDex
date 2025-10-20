@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'oauth_icons.dart';
+import 'package:irondex/widgets/auth/oauth_icons.dart';
 
 class OAuthLoginButtons extends StatelessWidget {
   const OAuthLoginButtons({

@@ -6,10 +6,12 @@ class RoutineActionsSheet extends StatelessWidget {
     super.key,
     required this.targetDate,
     required this.onCreateRoutine,
+    this.hasIncompleteDraft = false,
   });
 
   final DateTime targetDate;
-  final VoidCallback onCreateRoutine;
+  final Future<void> Function() onCreateRoutine;
+  final bool hasIncompleteDraft;
 
   @override
   Widget build(BuildContext context) {
@@ -38,20 +40,58 @@ class RoutineActionsSheet extends StatelessWidget {
             const SizedBox(height: 8),
             const Divider(height: 1),
             const SizedBox(height: 16),
+            if (hasIncompleteDraft)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '완료되지 않은 루틴이 있습니다. 이어서 완료해보세요.',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (hasIncompleteDraft) const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
                   _RoutineActionTile(
-                    icon: Icons.add_circle_outline,
-                    label: '새 루틴 만들기',
+                    icon: hasIncompleteDraft
+                        ? Icons.playlist_add_check
+                        : Icons.add_circle_outline,
+                    label: hasIncompleteDraft ? '루틴 이어서 작성하기' : '새 루틴 만들기',
                     onTap: onCreateRoutine,
                   ),
                   const SizedBox(height: 12),
                   _RoutineActionTile(
                     icon: Icons.history_rounded,
                     label: '지난 루틴 불러오기',
-                    onTap: () {
+                    onTap: () async {
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -60,6 +100,7 @@ class RoutineActionsSheet extends StatelessWidget {
                           ),
                         ),
                       );
+                      return;
                     },
                   ),
                 ],
@@ -81,14 +122,16 @@ class _RoutineActionTile extends StatelessWidget {
 
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final Future<void> Function() onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
+      onTap: () async {
+        await onTap();
+      },
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

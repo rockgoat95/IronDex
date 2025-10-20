@@ -53,13 +53,13 @@ extension RoutineExerciseSetTypeX on RoutineExerciseSetType {
   String get displayName {
     switch (this) {
       case RoutineExerciseSetType.warmup:
-        return '웜업';
+        return 'Warm-up';
       case RoutineExerciseSetType.drop:
-        return '드랍 세트';
+        return 'Drop Set';
       case RoutineExerciseSetType.fail:
-        return '실패 세트';
+        return 'Failure Set';
       case RoutineExerciseSetType.main:
-        return '본세트';
+        return 'Main Set';
     }
   }
 }
@@ -111,5 +111,34 @@ class RoutineExerciseSetDraft {
       type: resolvedType,
       isCompleted: isCompleted ?? this.isCompleted,
     );
+  }
+}
+
+extension RoutineExerciseSetTypeDbMapper on RoutineExerciseSetType {
+  static RoutineExerciseSetType fromSupabaseValue(String? value) {
+    switch (value) {
+      case 'warm_up':
+        return RoutineExerciseSetType.warmup;
+      case 'drop_set':
+        return RoutineExerciseSetType.drop;
+      case 'failure_set':
+        return RoutineExerciseSetType.fail;
+      case 'main_set':
+      default:
+        return RoutineExerciseSetType.main;
+    }
+  }
+
+  String get supabaseValue {
+    switch (this) {
+      case RoutineExerciseSetType.warmup:
+        return 'warm_up';
+      case RoutineExerciseSetType.drop:
+        return 'drop_set';
+      case RoutineExerciseSetType.fail:
+        return 'failure_set';
+      case RoutineExerciseSetType.main:
+        return 'main_set';
+    }
   }
 }

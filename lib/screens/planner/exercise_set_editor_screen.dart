@@ -1,6 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:irondex/models/routine_exercise_draft.dart';
+import 'package:irondex/widgets/planner/machine_summary_card.dart';
 
 const double _columnSpacing = 8;
 
@@ -106,22 +106,6 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
     });
   }
 
-  Future<void> _handleSave() async {
-    final updatedSets = <RoutineExerciseSetDraft>[];
-    for (var i = 0; i < _entries.length; i++) {
-      final entry = _entries[i];
-      final weight = double.tryParse(entry.weightController.text.trim());
-      final reps = int.tryParse(entry.repsController.text.trim());
-      updatedSets.add(
-        entry.set.copyWith(order: i + 1, weight: weight, reps: reps),
-      );
-    }
-
-    final updatedExercise = widget.exercise.copyWith(sets: updatedSets);
-    if (!mounted) return;
-    Navigator.of(context).pop(updatedExercise);
-  }
-
   void _renumberSets() {
     for (var i = 0; i < _entries.length; i++) {
       final entry = _entries[i];
@@ -129,99 +113,90 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
     }
   }
 
+  RoutineExerciseDraft _buildUpdatedExercise() {
+    final updatedSets = <RoutineExerciseSetDraft>[];
+    for (var i = 0; i < _entries.length; i++) {
+      final entry = _entries[i];
+      final weight = double.tryParse(entry.weightController.text.trim());
+      final reps = int.tryParse(entry.repsController.text.trim());
+      final updatedSet = entry.set.copyWith(
+        order: i + 1,
+        weight: weight,
+        reps: reps,
+      );
+      entry.set = updatedSet;
+      updatedSets.add(updatedSet);
+    }
+    return widget.exercise.copyWith(sets: updatedSets);
+  }
+
+  void _popWithUpdatedExercise() {
+    final updatedExercise = _buildUpdatedExercise();
+    if (!mounted) {
+      return;
+    }
+    Navigator.of(context).pop(updatedExercise);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('세트 편집'),
-        actions: [TextButton(onPressed: _handleSave, child: const Text('완료'))],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _ExerciseSummaryCard(exercise: widget.exercise),
-            const SizedBox(height: 16),
-            _SetTableHeader(theme: theme),
-            Expanded(
-              child: ListView.separated(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  16,
-                  16,
-                  (bottomInset > 0 ? bottomInset : 0) + 24,
-                ),
-                itemBuilder: (context, index) {
-                  if (index == _entries.length) {
-                    return _SetControlsRow(
-                      onAdd: _addSet,
-                      onRemove: _entries.length > 1 ? _removeLastSet : null,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
+        _popWithUpdatedExercise();
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Edit Sets')),
+        body: SafeArea(
+          child: Column(
+            children: [
+              MachineSummaryCard(
+                exercise: widget.exercise,
+                margin: const EdgeInsets.all(16),
+                thumbnailSize: 72,
+              ),
+              const SizedBox(height: 16),
+              _SetTableHeader(theme: theme),
+              Expanded(
+                child: ListView.separated(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    16,
+                    16,
+                    (bottomInset > 0 ? bottomInset : 0) + 24,
+                  ),
+                  itemBuilder: (context, index) {
+                    if (index == _entries.length) {
+                      return _SetControlsRow(
+                        onAdd: _addSet,
+                        onRemove: _entries.length > 1 ? _removeLastSet : null,
+                      );
+                    }
+                    final entry = _entries[index];
+                    final displayLabel = _labelForSet(index);
+                    final chipColor = _chipColorForSetType(
+                      entry.set.type,
+                      theme,
                     );
-                  }
-                  final entry = _entries[index];
-                  final displayLabel = _labelForSet(index);
-                  final chipColor = _chipColorForSetType(entry.set.type, theme);
-                  return _SetRow(
-                    entry: entry,
-                    displayLabel: displayLabel,
-                    labelColor: chipColor,
-                    onTypeTap: () => _selectSetType(index),
-                    onCompletedToggle: () => _toggleCompleted(index),
-                  );
-                },
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemCount: _entries.length + 1,
+                    return _SetRow(
+                      entry: entry,
+                      displayLabel: displayLabel,
+                      labelColor: chipColor,
+                      onTypeTap: () => _selectSetType(index),
+                      onCompletedToggle: () => _toggleCompleted(index),
+                    );
+                  },
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemCount: _entries.length + 1,
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ExerciseSummaryCard extends StatelessWidget {
-  const _ExerciseSummaryCard({required this.exercise});
-
-  final RoutineExerciseDraft exercise;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            _ExerciseThumbnail(imageUrl: exercise.imageUrl),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _BrandInfo(
-                    brandLogoUrl: exercise.brandLogoUrl,
-                    brandName: exercise.brandName,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    exercise.machineName,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -250,7 +225,7 @@ class _SetTableHeader extends StatelessWidget {
               child: Align(
                 alignment: Alignment.center,
                 child: Text(
-                  '세트',
+                  'Set',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
@@ -264,7 +239,7 @@ class _SetTableHeader extends StatelessWidget {
               child: Align(
                 alignment: Alignment.center,
                 child: Text(
-                  '키로',
+                  'Weight (kg)',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
@@ -278,7 +253,7 @@ class _SetTableHeader extends StatelessWidget {
               child: Align(
                 alignment: Alignment.center,
                 child: Text(
-                  '회',
+                  'Reps',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
@@ -292,7 +267,7 @@ class _SetTableHeader extends StatelessWidget {
               child: Align(
                 alignment: Alignment.center,
                 child: Text(
-                  '완료',
+                  'Done',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
@@ -352,7 +327,7 @@ class _SetRow extends StatelessWidget {
               alignment: Alignment.center,
               child: _NumericField(
                 controller: entry.weightController,
-                hintText: 'KG',
+                hintText: 'kg',
               ),
             ),
           ),
@@ -363,7 +338,7 @@ class _SetRow extends StatelessWidget {
               alignment: Alignment.center,
               child: _NumericField(
                 controller: entry.repsController,
-                hintText: '회',
+                hintText: 'reps',
               ),
             ),
           ),
@@ -494,14 +469,14 @@ class _SetControlsRow extends StatelessWidget {
             onPressed: onAdd,
             style: FilledButton.styleFrom(minimumSize: const Size(112, 44)),
             icon: const Icon(Icons.add),
-            label: const Text('세트 추가'),
+            label: const Text('Add Set'),
           ),
           const SizedBox(width: 12),
           OutlinedButton.icon(
             onPressed: onRemove,
             style: OutlinedButton.styleFrom(minimumSize: const Size(112, 44)),
             icon: const Icon(Icons.remove),
-            label: const Text('세트 제거'),
+            label: const Text('Remove Set'),
           ),
         ],
       ),
@@ -522,19 +497,6 @@ Color _chipColorForSetType(RoutineExerciseSetType type, ThemeData theme) {
   }
 }
 
-String _typeSubtitle(RoutineExerciseSetType type) {
-  switch (type) {
-    case RoutineExerciseSetType.warmup:
-      return '화면에서는 W로 표시됩니다';
-    case RoutineExerciseSetType.drop:
-      return '화면에서는 D로 표시됩니다';
-    case RoutineExerciseSetType.fail:
-      return '화면에서는 F로 표시됩니다';
-    case RoutineExerciseSetType.main:
-      return '화면에서는 1, 2, 3처럼 표시됩니다';
-  }
-}
-
 class _SetTypePicker extends StatelessWidget {
   const _SetTypePicker({required this.currentType});
 
@@ -551,7 +513,7 @@ class _SetTypePicker extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              '세트 유형 선택',
+              'Select Set Type',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -569,7 +531,6 @@ class _SetTypePicker extends StatelessWidget {
                   color: _chipColorForSetType(type, theme),
                 ),
                 title: Text(type.displayName),
-                subtitle: Text(_typeSubtitle(type)),
                 trailing: type == currentType
                     ? Icon(Icons.check, color: theme.colorScheme.primary)
                     : null,
@@ -635,132 +596,5 @@ class _SetFormEntry {
   void dispose() {
     weightController.dispose();
     repsController.dispose();
-  }
-}
-
-class _ExerciseThumbnail extends StatelessWidget {
-  const _ExerciseThumbnail({this.imageUrl});
-
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    const double size = 72;
-    final placeholder = Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      alignment: Alignment.center,
-      child: Icon(
-        Icons.image_outlined,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-    );
-
-    final url = imageUrl;
-    if (url == null || url.isEmpty) {
-      return placeholder;
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: CachedNetworkImage(
-        imageUrl: url,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => Container(
-          width: size,
-          height: size,
-          alignment: Alignment.center,
-          child: const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-        errorWidget: (_, __, ___) => placeholder,
-      ),
-    );
-  }
-}
-
-class _BrandInfo extends StatelessWidget {
-  const _BrandInfo({this.brandLogoUrl, this.brandName});
-
-  final String? brandLogoUrl;
-  final String? brandName;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    Widget buildLogo() {
-      const double size = 24;
-      if (brandLogoUrl == null || brandLogoUrl!.isEmpty) {
-        return Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          alignment: Alignment.center,
-          child: Icon(
-            Icons.fitness_center,
-            size: 14,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        );
-      }
-
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: CachedNetworkImage(
-          imageUrl: brandLogoUrl!,
-          width: size,
-          height: size,
-          fit: BoxFit.contain,
-          placeholder: (_, __) => Container(
-            width: size,
-            height: size,
-            color: theme.colorScheme.surfaceVariant,
-          ),
-          errorWidget: (_, __, ___) => Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.fitness_center,
-              size: 14,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Row(
-      children: [
-        buildLogo(),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            brandName?.isNotEmpty == true ? brandName! : '머신',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }

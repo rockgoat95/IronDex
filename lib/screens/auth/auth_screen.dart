@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:irondex/providers/auth_provider.dart';
-import 'package:irondex/widgets/oauth_login_buttons.dart';
+import 'package:irondex/widgets/auth/oauth_login_buttons.dart';
 import 'package:provider/provider.dart';
 
 class AuthScreen extends StatefulWidget {
