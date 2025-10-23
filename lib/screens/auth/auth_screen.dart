@@ -39,23 +39,15 @@ class _AuthScreenState extends State<AuthScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      '환영합니다',
-                      textAlign: TextAlign.center,
-                      style: textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                    const SizedBox(height: 32),
+                    Center(
+                      child: Image.asset(
+                        'assets/logo/image.png',
+                        height: 180,
+                        fit: BoxFit.contain,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '간편하게 로그인하세요',
-                      textAlign: TextAlign.center,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 48),
                     OAuthLoginButtons(
                       onKakao: () => _handleSignIn(
                         () => context.read<AuthProvider>().signInWithKakao(),

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:irondex/models/planner_routine.dart';
 import 'package:irondex/screens/planner/routine_editor_screen.dart';
 import 'package:irondex/services/planner_repository.dart';
 import 'package:irondex/widgets/planner/planner_calendar.dart';
@@ -32,6 +33,71 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
     _selectedDate.month,
   );
   bool _skipNextAutoSelection = false;
+  PlannerRoutine? _selectedRoutine;
+  bool _isRoutineLoading = false;
+  String? _routineError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRoutineForDate(_selectedDate);
+  }
+
+  Future<void> _loadRoutineForDate(DateTime date) async {
+    setState(() {
+      _isRoutineLoading = true;
+      _routineError = null;
+    });
+
+    try {
+      final routine = await _plannerRepository.fetchRoutine(date);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _selectedRoutine = routine;
+      });
+    } on PlannerRepositoryException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _routineError = error.message;
+        _selectedRoutine = null;
+      });
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('[PlannerScreen] loadRoutine error=$error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _routineError = '루틴 정보를 불러오지 못했습니다.';
+        _selectedRoutine = null;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRoutineLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _navigateToRoutineEditor(DateTime date) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => RoutineEditorScreen(targetDate: date)),
+    );
+    if (!mounted) {
+      return;
+    }
+    await _loadRoutineForDate(date);
+    if (result == true) {
+      _showRoutineSavedBanner();
+    }
+  }
 
   Future<void> _handleDateSelected(DateTime date) async {
     if (_skipNextAutoSelection) {
@@ -51,6 +117,7 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
       _selectedDate = next;
       _focusedMonth = DateTime(next.year, next.month);
     });
+    await _loadRoutineForDate(next);
     bool hasIncomplete = false;
     try {
       hasIncomplete = await _plannerRepository.hasIncompleteRoutine(next);
@@ -89,17 +156,7 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
         hasIncompleteDraft: hasIncomplete,
         onCreateRoutine: () async {
           Navigator.of(sheetContext).pop();
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => RoutineEditorScreen(targetDate: date),
-            ),
-          );
-          if (!mounted) {
-            return;
-          }
-          if (result == true) {
-            _showRoutineSavedBanner();
-          }
+          await _navigateToRoutineEditor(date);
         },
       ),
     );
@@ -159,8 +216,16 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
                   });
                 },
               ),
-              const SizedBox(height: 24),
-              PlannerSummaryCard(selectedDate: _selectedDate),
+              const SizedBox(height: 32),
+              PlannerSummaryCard(
+                selectedDate: _selectedDate,
+                routine: _selectedRoutine,
+                isLoading: _isRoutineLoading,
+                error: _routineError,
+                onAction: _isRoutineLoading
+                    ? null
+                    : () => _navigateToRoutineEditor(_selectedDate),
+              ),
             ],
           ),
         ),

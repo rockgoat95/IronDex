@@ -123,7 +123,7 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset('assets/logo/image.png', height: 32),
+          Image.asset('assets/logo/app_logo.png', height: 32),
           const SizedBox(width: 8),
           const Text('Iron Dex', style: TextStyle(fontWeight: FontWeight.bold)),
         ],
@@ -146,7 +146,7 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
           selectedBrandId: filter.selectedBrandId,
           onBrandSelected: _onBrandSelected,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 4),
         BodyPartChips(
           selectedBodyParts: filter.selectedBodyParts,
           onBodyPartsChanged: _onBodyPartsChanged,

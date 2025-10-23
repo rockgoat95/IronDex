@@ -22,7 +22,6 @@ class _BrandFilterGridState extends State<BrandFilterGrid> {
   bool _isExpanded = false;
   final ScrollController _scrollController = ScrollController();
 
-  static const double _collapsedHeight = 100.0;
   static const double _expandedRowHeight = 84.0;
   static const int _visibleRowsWhenExpanded = 3;
   static const int _collapsedCrossAxisCount = 6;
@@ -75,7 +74,7 @@ class _BrandFilterGridState extends State<BrandFilterGrid> {
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: _expandedCrossAxisCount,
-                          childAspectRatio: 0.85,
+                          childAspectRatio: 0.82,
                           mainAxisSpacing: 4,
                           crossAxisSpacing: 4,
                         ),
@@ -140,47 +139,45 @@ class _BrandFilterGridState extends State<BrandFilterGrid> {
         final bool hasMoreBrands = brands.length > 5;
         final int itemCount = hasMoreBrands ? 6 : brands.length;
 
-        return SizedBox(
+        return GridView.builder(
           key: const ValueKey('collapsed'),
-          height: _collapsedHeight,
-          child: GridView.builder(
-            padding: EdgeInsets.zero,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: _collapsedCrossAxisCount,
-              childAspectRatio: 0.7,
-              mainAxisSpacing: 4,
-              crossAxisSpacing: 4,
-            ),
-            itemCount: itemCount,
-            itemBuilder: (context, index) {
-              if (hasMoreBrands && index == 5) {
-                return GestureDetector(
-                  onTap: () => setState(() => _isExpanded = true),
-                  child: const BrandItem(name: '더보기', isPlusButton: true),
-                );
-              }
-
-              if (index >= brands.length) {
-                return const SizedBox.shrink();
-              }
-
-              final brand = brands[index];
-              final brandId = brand['id']?.toString();
-              final isSelected = widget.selectedBrandId == brandId;
-
-              return GestureDetector(
-                onTap: () {
-                  widget.onBrandSelected(isSelected ? null : brandId);
-                },
-                child: BrandItem(
-                  name: brand['name'] ?? '',
-                  image: brand['logo_url'],
-                  isSelected: isSelected,
-                ),
-              );
-            },
+          shrinkWrap: true,
+          padding: EdgeInsets.zero,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: _collapsedCrossAxisCount,
+            childAspectRatio: 0.72,
+            mainAxisSpacing: 2,
+            crossAxisSpacing: 4,
           ),
+          itemCount: itemCount,
+          itemBuilder: (context, index) {
+            if (hasMoreBrands && index == 5) {
+              return GestureDetector(
+                onTap: () => setState(() => _isExpanded = true),
+                child: const BrandItem(name: '더보기', isPlusButton: true),
+              );
+            }
+
+            if (index >= brands.length) {
+              return const SizedBox.shrink();
+            }
+
+            final brand = brands[index];
+            final brandId = brand['id']?.toString();
+            final isSelected = widget.selectedBrandId == brandId;
+
+            return GestureDetector(
+              onTap: () {
+                widget.onBrandSelected(isSelected ? null : brandId);
+              },
+              child: BrandItem(
+                name: brand['name'] ?? '',
+                image: brand['logo_url'],
+                isSelected: isSelected,
+              ),
+            );
+          },
         );
       },
     );

@@ -20,10 +20,10 @@ class BrandItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double maxWidth = constraints.maxWidth.isFinite
-            ? constraints.maxWidth
-            : 52;
-        final double cardSize = maxWidth >= 52 ? 52 : maxWidth;
+    final double tileWidth = constraints.maxWidth.isFinite
+      ? constraints.maxWidth
+      : 52;
+    final double cardSize = tileWidth >= 48 ? 48 : tileWidth;
 
         if (isPlusButton) {
           return Column(
@@ -45,10 +45,10 @@ class BrandItem extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3),
               Flexible(
                 child: SizedBox(
-                  width: cardSize,
+                  width: tileWidth,
                   child: Text(
                     name,
                     style: const TextStyle(
@@ -100,13 +100,13 @@ class BrandItem extends StatelessWidget {
             const SizedBox(height: 4),
             Flexible(
               child: SizedBox(
-                width: cardSize,
+                width: tileWidth,
                 child: Text(
                   name,
                   style: const TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
-                    height: 1.2,
+                    height: 1.18,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

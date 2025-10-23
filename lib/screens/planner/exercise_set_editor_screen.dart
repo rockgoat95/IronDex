@@ -17,6 +17,66 @@ class ExerciseSetEditorScreen extends StatefulWidget {
 class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
   late List<_SetFormEntry> _entries;
 
+  void _handleFieldChanged() {
+    setState(() {});
+  }
+
+  void _showCompletedEditWarning() {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Completed sets cannot be edited. Unmark Done to make changes.',
+        ),
+      ),
+    );
+  }
+
+  void _showInvalidCompletionWarning() {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Enter valid numbers before marking a set as done.'),
+      ),
+    );
+  }
+
+  bool _isValidWeightText(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || trimmed == '-') {
+      return false;
+    }
+    return double.tryParse(trimmed) != null;
+  }
+
+  bool _isValidRepsText(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || trimmed == '-') {
+      return false;
+    }
+    return int.tryParse(trimmed) != null;
+  }
+
+  double? _parseWeight(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || trimmed == '-') {
+      return null;
+    }
+    return double.tryParse(trimmed);
+  }
+
+  int? _parseReps(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || trimmed == '-') {
+      return null;
+    }
+    return int.tryParse(trimmed);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -117,8 +177,8 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
     final updatedSets = <RoutineExerciseSetDraft>[];
     for (var i = 0; i < _entries.length; i++) {
       final entry = _entries[i];
-      final weight = double.tryParse(entry.weightController.text.trim());
-      final reps = int.tryParse(entry.repsController.text.trim());
+      final weight = _parseWeight(entry.weightController.text);
+      final reps = _parseReps(entry.repsController.text);
       final updatedSet = entry.set.copyWith(
         order: i + 1,
         weight: weight,
@@ -183,12 +243,24 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
                       entry.set.type,
                       theme,
                     );
+                    final weightValid = _isValidWeightText(
+                      entry.weightController.text,
+                    );
+                    final repsValid = _isValidRepsText(
+                      entry.repsController.text,
+                    );
+                    final completionEnabled =
+                        entry.set.isCompleted || (weightValid && repsValid);
                     return _SetRow(
                       entry: entry,
                       displayLabel: displayLabel,
                       labelColor: chipColor,
                       onTypeTap: () => _selectSetType(index),
                       onCompletedToggle: () => _toggleCompleted(index),
+                      onFieldChanged: _handleFieldChanged,
+                      onAttemptEditCompleted: _showCompletedEditWarning,
+                      completionEnabled: completionEnabled,
+                      onCompletionBlocked: _showInvalidCompletionWarning,
                     );
                   },
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -221,14 +293,17 @@ class _SetTableHeader extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              flex: 3,
+              flex: 2,
               child: Align(
                 alignment: Alignment.center,
-                child: Text(
-                  'Set',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Set',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
@@ -238,11 +313,14 @@ class _SetTableHeader extends StatelessWidget {
               flex: 3,
               child: Align(
                 alignment: Alignment.center,
-                child: Text(
-                  'Weight (kg)',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Weight (kg)',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
@@ -252,25 +330,31 @@ class _SetTableHeader extends StatelessWidget {
               flex: 3,
               child: Align(
                 alignment: Alignment.center,
-                child: Text(
-                  'Reps',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Reps',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
             ),
             const SizedBox(width: _columnSpacing),
             Expanded(
-              flex: 4,
+              flex: 3,
               child: Align(
                 alignment: Alignment.center,
-                child: Text(
-                  'Done',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Done',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
@@ -289,6 +373,10 @@ class _SetRow extends StatelessWidget {
     required this.labelColor,
     required this.onTypeTap,
     required this.onCompletedToggle,
+    required this.onFieldChanged,
+    required this.onAttemptEditCompleted,
+    required this.completionEnabled,
+    required this.onCompletionBlocked,
   });
 
   final _SetFormEntry entry;
@@ -296,6 +384,10 @@ class _SetRow extends StatelessWidget {
   final Color labelColor;
   final VoidCallback onTypeTap;
   final VoidCallback onCompletedToggle;
+  final VoidCallback onFieldChanged;
+  final VoidCallback onAttemptEditCompleted;
+  final bool completionEnabled;
+  final VoidCallback onCompletionBlocked;
 
   @override
   Widget build(BuildContext context) {
@@ -310,24 +402,29 @@ class _SetRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            flex: 3,
+            flex: 2,
             child: Align(
               alignment: Alignment.center,
               child: _SetChip(
                 label: displayLabel,
                 color: labelColor,
-                onTap: onTypeTap,
+                onTap: entry.set.isCompleted
+                    ? onAttemptEditCompleted
+                    : onTypeTap,
               ),
             ),
           ),
           const SizedBox(width: _columnSpacing),
           Expanded(
-            flex: 3,
+            flex: 4,
             child: Align(
               alignment: Alignment.center,
               child: _NumericField(
                 controller: entry.weightController,
                 hintText: 'kg',
+                readOnly: entry.set.isCompleted,
+                onAttemptEditCompleted: onAttemptEditCompleted,
+                onChanged: (_) => onFieldChanged(),
               ),
             ),
           ),
@@ -339,17 +436,22 @@ class _SetRow extends StatelessWidget {
               child: _NumericField(
                 controller: entry.repsController,
                 hintText: 'reps',
+                readOnly: entry.set.isCompleted,
+                onAttemptEditCompleted: onAttemptEditCompleted,
+                onChanged: (_) => onFieldChanged(),
               ),
             ),
           ),
           const SizedBox(width: _columnSpacing),
-          Flexible(
-            flex: 4,
+          Expanded(
+            flex: 3,
             child: Align(
               alignment: Alignment.center,
               child: _CompletionButton(
                 isCompleted: entry.set.isCompleted,
+                enabled: completionEnabled,
                 onTap: onCompletedToggle,
+                onDisabledTap: onCompletionBlocked,
               ),
             ),
           ),
@@ -360,10 +462,19 @@ class _SetRow extends StatelessWidget {
 }
 
 class _NumericField extends StatelessWidget {
-  const _NumericField({required this.controller, required this.hintText});
+  const _NumericField({
+    required this.controller,
+    required this.hintText,
+    required this.readOnly,
+    required this.onAttemptEditCompleted,
+    required this.onChanged,
+  });
 
   final TextEditingController controller;
   final String hintText;
+  final bool readOnly;
+  final VoidCallback onAttemptEditCompleted;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -371,6 +482,9 @@ class _NumericField extends StatelessWidget {
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       textAlign: TextAlign.center,
+      readOnly: readOnly,
+      onTap: readOnly ? onAttemptEditCompleted : null,
+      onChanged: onChanged,
       decoration: InputDecoration(
         hintText: hintText,
         filled: true,
@@ -423,16 +537,23 @@ class _SetChip extends StatelessWidget {
 }
 
 class _CompletionButton extends StatelessWidget {
-  const _CompletionButton({required this.isCompleted, required this.onTap});
+  const _CompletionButton({
+    required this.isCompleted,
+    required this.enabled,
+    required this.onTap,
+    required this.onDisabledTap,
+  });
 
   final bool isCompleted;
+  final bool enabled;
   final VoidCallback onTap;
+  final VoidCallback onDisabledTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return GestureDetector(
-      onTap: onTap,
+      onTap: enabled ? onTap : onDisabledTap,
       child: Container(
         width: 40,
         height: 38,
@@ -441,11 +562,14 @@ class _CompletionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         alignment: Alignment.center,
-        child: Icon(
-          isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-          color: isCompleted
-              ? theme.colorScheme.primary
-              : theme.colorScheme.onSurfaceVariant,
+        child: Opacity(
+          opacity: enabled || isCompleted ? 1 : 0.4,
+          child: Icon(
+            isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: isCompleted
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );
@@ -578,10 +702,10 @@ class _SetFormEntry {
   _SetFormEntry({required RoutineExerciseSetDraft set})
     : _set = set,
       weightController = TextEditingController(
-        text: set.weight != null ? set.weight!.toString() : '',
+        text: set.weight != null ? set.weight!.toString() : '-',
       ),
       repsController = TextEditingController(
-        text: set.reps != null ? set.reps!.toString() : '',
+        text: set.reps != null ? set.reps!.toString() : '-',
       );
 
   RoutineExerciseSetDraft get set => _set;

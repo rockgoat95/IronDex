@@ -29,6 +29,8 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
   PlannerRoutineStatus _status = PlannerRoutineStatus.draft;
   bool _isLoading = true;
   bool _autoSaveInProgress = false;
+  bool _manualSaveInProgress = false;
+  bool _completionActionInProgress = false;
   bool _hasPendingChanges = false;
   bool _isHydrating = true;
   String? _loadError;
@@ -142,7 +144,10 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
     });
   }
 
-  Future<void> _saveRoutine({required bool isAuto}) async {
+  Future<void> _saveRoutine({
+    required bool isAuto,
+    String? manualMessage,
+  }) async {
     if (_isLoading) {
       return;
     }
@@ -157,6 +162,8 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
     setState(() {
       if (isAuto) {
         _autoSaveInProgress = true;
+      } else {
+        _manualSaveInProgress = true;
       }
       _loadError = null;
     });
@@ -181,9 +188,14 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
       });
 
       if (!isAuto) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('변경 사항이 저장되었습니다.')));
+        final message = manualMessage == null || manualMessage.isEmpty
+            ? '변경 사항이 저장되었습니다.'
+            : manualMessage;
+        if (message.isNotEmpty) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
+        }
       }
     } on PlannerRepositoryException catch (error) {
       if (!mounted) {
@@ -209,6 +221,8 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
         setState(() {
           if (isAuto) {
             _autoSaveInProgress = false;
+          } else {
+            _manualSaveInProgress = false;
           }
         });
       }
@@ -297,10 +311,251 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
     _markContentDirty();
   }
 
+  Widget _buildExerciseStatusBadge(
+    RoutineExerciseDraft exercise,
+    ThemeData theme,
+  ) {
+    final hasSets = exercise.sets.isNotEmpty;
+    final bool allCompleted =
+        hasSets && exercise.sets.every((set) => set.isCompleted);
+
+    final String label = allCompleted ? 'Complete' : 'In Progress';
+    final Color backgroundColor = allCompleted
+        ? Colors.green.shade500
+        : Colors.blue.shade500;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style:
+            theme.textTheme.labelSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ) ??
+            const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+            ),
+      ),
+    );
+  }
+
+  Widget _buildCompletionControl(ThemeData theme) {
+    final bool isCompleted = _status == PlannerRoutineStatus.completed;
+    final bool isBusy =
+        _completionActionInProgress ||
+        _manualSaveInProgress ||
+        _autoSaveInProgress;
+
+    final TextStyle? labelStyle = theme.textTheme.labelSmall?.copyWith(
+      fontWeight: FontWeight.w600,
+    );
+
+    final Widget toggleChild = isBusy
+        ? const SizedBox(
+            height: 24,
+            width: 40,
+            child: Center(
+              child: SizedBox(
+                height: 18,
+                width: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          )
+        : Transform.scale(
+            scale: 0.86,
+            alignment: Alignment.topRight,
+            child: Switch.adaptive(
+              value: isCompleted,
+              onChanged: _isLoading
+                  ? null
+                  : (value) {
+                      _handleCompletionToggle(value);
+                    },
+              activeTrackColor: theme.colorScheme.primary,
+            ),
+          );
+
+    return Transform.translate(
+      offset: const Offset(0, -4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text('Complete', style: labelStyle),
+          const SizedBox(height: 1),
+          toggleChild,
+        ],
+      ),
+    );
+  }
+
+  Future<bool> _completeRoutine() async {
+    if (_isLoading ||
+        _autoSaveInProgress ||
+        _manualSaveInProgress ||
+        _completionActionInProgress) {
+      return false;
+    }
+
+    final trimmedTitle = _titleController.text.trim();
+    if (trimmedTitle.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter a title before completing the routine.'),
+        ),
+      );
+      return false;
+    }
+
+    if (_exercises.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('최소 한 개 이상의 운동을 추가해주세요.')));
+      return false;
+    }
+
+    final hasEmptySets = _exercises.any((exercise) => exercise.sets.isEmpty);
+    if (hasEmptySets) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('모든 운동에 최소 한 개 이상의 세트를 추가해주세요.')),
+      );
+      return false;
+    }
+
+    final bool allExercisesCompleted = _exercises.every(
+      (exercise) => exercise.sets.every((set) => set.isCompleted),
+    );
+    if (!allExercisesCompleted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Complete every set before completing this routine.'),
+        ),
+      );
+      return false;
+    }
+
+    final previousStatus = _status;
+
+    setState(() {
+      _status = PlannerRoutineStatus.completed;
+      _hasPendingChanges = true;
+      _completionActionInProgress = true;
+    });
+
+    _autoSaveDebounce?.cancel();
+
+    var success = false;
+    try {
+      await _saveRoutine(isAuto: false, manualMessage: '');
+      success = true;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _completionActionInProgress = false;
+        });
+      }
+    }
+
+    if (!mounted) {
+      return success;
+    }
+
+    if (_hasPendingChanges) {
+      setState(() {
+        _status = previousStatus;
+      });
+      return false;
+    }
+
+    if (success) {
+      _shouldNotifySaveOnExit = true;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('루틴을 완료로 저장했습니다.')));
+    }
+
+    return success;
+  }
+
+  Future<bool> _reopenRoutine() async {
+    if (_isLoading ||
+        _autoSaveInProgress ||
+        _manualSaveInProgress ||
+        _completionActionInProgress) {
+      return false;
+    }
+
+    final previousStatus = _status;
+
+    setState(() {
+      _status = PlannerRoutineStatus.draft;
+      _hasPendingChanges = true;
+      _completionActionInProgress = true;
+    });
+
+    _autoSaveDebounce?.cancel();
+
+    var success = false;
+    try {
+      await _saveRoutine(isAuto: false, manualMessage: '');
+      success = true;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _completionActionInProgress = false;
+        });
+      }
+    }
+
+    if (!mounted) {
+      return success;
+    }
+
+    if (_hasPendingChanges) {
+      setState(() {
+        _status = previousStatus;
+      });
+      return false;
+    }
+
+    if (success) {
+      _shouldNotifySaveOnExit = true;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('루틴을 다시 작성 상태로 변경했습니다.')));
+    }
+
+    return success;
+  }
+
+  Future<void> _handleCompletionToggle(bool value) async {
+    final bool isCompleted = _status == PlannerRoutineStatus.completed;
+    if (value == isCompleted) {
+      return;
+    }
+
+    final bool success = value
+        ? await _completeRoutine()
+        : await _reopenRoutine();
+    if (!success && mounted) {
+      setState(() {});
+    }
+  }
+
   Future<bool> _handleWillPop() async {
     _autoSaveDebounce?.cancel();
 
-    if (_autoSaveInProgress) {
+    if (_autoSaveInProgress ||
+        _manualSaveInProgress ||
+        _completionActionInProgress) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('저장 중입니다. 잠시만 기다려주세요.')));
@@ -363,28 +618,41 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                             if (_loadError != null)
                               _ErrorBanner(message: _loadError!),
                             if (_loadError != null) const SizedBox(height: 12),
-                            TextField(
-                              controller: _titleController,
-                              enabled: !_isLoading,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontSize: 15,
-                              ),
-                              decoration: InputDecoration(
-                                labelText: '루틴 제목',
-                                hintText: '예: 하체 머신 루틴',
-                                border: const OutlineInputBorder(),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 14,
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _titleController,
+                                    enabled: !_isLoading,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontSize: 15,
+                                    ),
+                                    decoration: InputDecoration(
+                                      labelText: 'Title',
+                                      hintText:
+                                          'e.g., Lower body machine routine',
+                                      border: const OutlineInputBorder(),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            vertical: 10,
+                                            horizontal: 14,
+                                          ),
+                                      labelStyle: theme.textTheme.bodySmall
+                                          ?.copyWith(fontSize: 13),
+                                      hintStyle: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            fontSize: 13,
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ),
                                 ),
-                                labelStyle: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 13,
-                                ),
-                                hintStyle: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 13,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
+                                const SizedBox(width: 12),
+                                _buildCompletionControl(theme),
+                              ],
                             ),
                             const SizedBox(height: 24),
                             Expanded(
@@ -400,13 +668,32 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                                           exercise: exercise,
                                           onTap: () =>
                                               _handleEditExercise(index),
-                                          trailing: IconButton(
-                                            onPressed: () =>
-                                                _handleRemoveExercise(index),
-                                            icon: const Icon(
-                                              Icons.delete_outline,
-                                            ),
-                                            tooltip: '삭제',
+                                          trailing: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              _buildExerciseStatusBadge(
+                                                exercise,
+                                                theme,
+                                              ),
+                                              const SizedBox(height: 18),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  top: 4,
+                                                ),
+                                                child: IconButton(
+                                                  onPressed: () =>
+                                                      _handleRemoveExercise(
+                                                        index,
+                                                      ),
+                                                  icon: const Icon(
+                                                    Icons.delete_outline,
+                                                  ),
+                                                  tooltip: '삭제',
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                           showSetCount: true,
                                         );
@@ -484,10 +771,8 @@ class _RoutineEmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.fitness_center, size: 48, color: theme.disabledColor),
-          const SizedBox(height: 12),
           Text(
-            '운동을 추가해서 루틴을 구성해보세요.',
+            'Add exercises to build your routine.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
