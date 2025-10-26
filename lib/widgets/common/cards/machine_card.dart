@@ -1,16 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:irondex/constants/ui_constants.dart';
 
 class MachineCard extends StatelessWidget {
-  final String name;
-  final String imageUrl;
-  final String brandName;
-  final String brandLogoUrl;
-  final double? score;
-  final int? reviewCnt;
-  final bool isFavorite;
-  final VoidCallback? onFavoriteToggle;
-
   const MachineCard({
     super.key,
     required this.name,
@@ -23,15 +15,24 @@ class MachineCard extends StatelessWidget {
     this.onFavoriteToggle,
   });
 
+  final String name;
+  final String imageUrl;
+  final String brandName;
+  final String brandLogoUrl;
+  final double? score;
+  final int? reviewCnt;
+  final bool isFavorite;
+  final VoidCallback? onFavoriteToggle;
+
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(kDefaultCardRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: kEmphasisShadowOpacity),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -43,7 +44,7 @@ class MachineCard extends StatelessWidget {
           Expanded(
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
+                top: Radius.circular(kDefaultCardRadius),
               ),
               child: Stack(
                 children: [

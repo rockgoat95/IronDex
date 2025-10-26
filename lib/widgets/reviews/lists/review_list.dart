@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:irondex/services/review_repository.dart';
+import 'package:irondex/models/reviews/review.dart';
+import 'package:irondex/services/repositories/review_repository.dart';
 import 'package:irondex/widgets/reviews/cards/review_card.dart';
 import 'package:provider/provider.dart';
 
@@ -24,7 +25,7 @@ class ReviewList extends StatefulWidget {
 }
 
 class _ReviewListState extends State<ReviewList> {
-  List<Map<String, dynamic>> reviews = [];
+  List<Review> reviews = <Review>[];
   bool loading = true;
 
   @override
@@ -59,7 +60,7 @@ class _ReviewListState extends State<ReviewList> {
         brandId: widget.brandId,
         machineId: widget.selectedMachineId,
         bodyParts: widget.bodyParts,
-        type: widget.machineType,
+        machineType: widget.machineType,
         limit: 20,
       );
       debugPrint('ReviewList fetchReviews - result count: ${result.length}');
@@ -69,7 +70,7 @@ class _ReviewListState extends State<ReviewList> {
       }
 
       setState(() {
-        reviews = result;
+        reviews = List<Review>.from(result);
         loading = false;
       });
     } catch (e) {

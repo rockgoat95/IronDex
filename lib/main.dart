@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:irondex/providers/auth_provider.dart';
-import 'package:irondex/providers/machine_favorite_provider.dart';
-import 'package:irondex/providers/review_like_provider.dart';
+import 'package:irondex/providers/provider_setup.dart';
 import 'package:irondex/screens/auth/auth_screen.dart';
 import 'package:irondex/screens/main/main_screen.dart';
 import 'package:irondex/screens/splash/splash_screen.dart';
-import 'package:irondex/services/review_repository.dart';
+import 'package:irondex/services/service_locator.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -21,6 +20,7 @@ void main() async {
   }
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+  ServiceLocator.initialize();
   runApp(const MyApp());
 }
 
@@ -29,41 +29,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final services = ServiceLocator.instance;
+
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        Provider(create: (_) => ReviewRepository()),
-        ChangeNotifierProxyProvider2<
-          AuthProvider,
-          ReviewRepository,
-          MachineFavoriteProvider
-        >(
-          create: (_) => MachineFavoriteProvider(),
-          update: (_, auth, repository, previous) {
-            final provider = previous ?? MachineFavoriteProvider();
-            provider.updateDependencies(
-              authProvider: auth,
-              repository: repository,
-            );
-            return provider;
-          },
-        ),
-        ChangeNotifierProxyProvider2<
-          AuthProvider,
-          ReviewRepository,
-          ReviewLikeProvider
-        >(
-          create: (_) => ReviewLikeProvider(),
-          update: (_, auth, repository, previous) {
-            final provider = previous ?? ReviewLikeProvider();
-            provider.updateDependencies(
-              authProvider: auth,
-              repository: repository,
-            );
-            return provider;
-          },
-        ),
-      ],
+      providers: buildAppProviders(services),
       child: MaterialApp(
         title: 'IronDex',
         theme: ThemeData(

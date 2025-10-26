@@ -89,7 +89,7 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
             ),
           ];
     _entries = initialSets
-        .map((set) => _SetFormEntry(set: set))
+  .map((set) => _SetFormEntry(initialSet: set))
         .toList(growable: true);
   }
 
@@ -105,7 +105,7 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
     setState(() {
       final nextOrder = _entries.length + 1;
       _entries.add(
-        _SetFormEntry(set: RoutineExerciseSetDraft(order: nextOrder)),
+  _SetFormEntry(initialSet: RoutineExerciseSetDraft(order: nextOrder)),
       );
     });
   }
@@ -263,7 +263,7 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
                       onCompletionBlocked: _showInvalidCompletionWarning,
                     );
                   },
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  separatorBuilder: (context, _) => const SizedBox(height: 12),
                   itemCount: _entries.length + 1,
                 ),
               ),
@@ -683,7 +683,7 @@ class _TypeBadge extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant,
+  color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       alignment: Alignment.center,
@@ -699,21 +699,18 @@ class _TypeBadge extends StatelessWidget {
 }
 
 class _SetFormEntry {
-  _SetFormEntry({required RoutineExerciseSetDraft set})
-    : _set = set,
+  _SetFormEntry({required RoutineExerciseSetDraft initialSet})
+    : set = initialSet,
       weightController = TextEditingController(
-        text: set.weight != null ? set.weight!.toString() : '-',
+        text: initialSet.weight != null
+            ? initialSet.weight!.toString()
+            : '-',
       ),
       repsController = TextEditingController(
-        text: set.reps != null ? set.reps!.toString() : '-',
+        text: initialSet.reps != null ? initialSet.reps!.toString() : '-',
       );
 
-  RoutineExerciseSetDraft get set => _set;
-  set set(RoutineExerciseSetDraft value) {
-    _set = value;
-  }
-
-  RoutineExerciseSetDraft _set;
+  RoutineExerciseSetDraft set;
   final TextEditingController weightController;
   final TextEditingController repsController;
 

@@ -1,31 +1,26 @@
-import 'package:flutter/foundation.dart';
 import 'package:irondex/providers/auth_provider.dart';
-import 'package:irondex/services/review_repository.dart';
+import 'package:irondex/providers/base_remote_state_provider.dart';
+import 'package:irondex/services/repositories/machine_repository.dart';
 
-class MachineFavoriteProvider with ChangeNotifier {
+class MachineFavoriteProvider extends BaseRemoteStateProvider {
   MachineFavoriteProvider({
     AuthProvider? authProvider,
-    ReviewRepository? repository,
+    MachineRepository? repository,
   }) : _authProvider = authProvider,
        _repository = repository,
        _currentUserId = authProvider?.currentUser?.id;
 
   AuthProvider? _authProvider;
-  ReviewRepository? _repository;
+  MachineRepository? _repository;
   String? _currentUserId;
 
   final Set<String> _favoriteMachineIds = <String>{};
-
-  bool _isFetching = false;
-  bool _initialized = false;
-
-  bool get isInitialized => _initialized;
 
   Set<String> get favorites => Set.unmodifiable(_favoriteMachineIds);
 
   void updateDependencies({
     required AuthProvider authProvider,
-    required ReviewRepository repository,
+    required MachineRepository repository,
   }) {
     final newUserId = authProvider.currentUser?.id;
     final userChanged = newUserId != _currentUserId;
@@ -35,20 +30,20 @@ class MachineFavoriteProvider with ChangeNotifier {
     _repository = repository;
 
     if (repositoryChanged) {
-      _initialized = false;
+      resetInitialization();
     }
 
     if (userChanged) {
       _currentUserId = newUserId;
       if (newUserId == null) {
         _favoriteMachineIds.clear();
-        _initialized = false;
-        notifyListeners();
+        resetInitialization(notify: true);
         return;
       }
+      resetInitialization();
     }
 
-    if (!_initialized && !_isFetching && _currentUserId != null) {
+    if (!isInitialized && !isFetching && _currentUserId != null) {
       refreshFavorites();
     }
   }
@@ -68,21 +63,13 @@ class MachineFavoriteProvider with ChangeNotifier {
       return;
     }
 
-    if (_isFetching) {
-      return;
-    }
-
-    _isFetching = true;
-    try {
+    await executeFetch(() async {
       final favorites = await repository.fetchFavoriteMachineIds();
       _favoriteMachineIds
         ..clear()
         ..addAll(favorites);
-      _initialized = true;
       notifyListeners();
-    } finally {
-      _isFetching = false;
-    }
+    });
   }
 
   Future<void> toggleFavorite(String machineId) async {

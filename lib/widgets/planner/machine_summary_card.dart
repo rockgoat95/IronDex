@@ -121,7 +121,7 @@ class _MachineThumbnail extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+  color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       alignment: Alignment.center,
@@ -143,18 +143,18 @@ class _MachineThumbnail extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Container(
+        placeholder: (context, url) => Container(
           width: size,
           height: size,
           alignment: Alignment.center,
-          color: Theme.of(context).colorScheme.surfaceVariant,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           child: const SizedBox(
             width: 20,
             height: 20,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
         ),
-        errorWidget: (_, __, ___) => placeholder,
+        errorWidget: (context, url, error) => placeholder,
       ),
     );
   }
@@ -178,7 +178,7 @@ class _BrandInfo extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant,
+            color: theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(6),
           ),
           alignment: Alignment.center,
@@ -197,16 +197,16 @@ class _BrandInfo extends StatelessWidget {
           width: size,
           height: size,
           fit: BoxFit.contain,
-          placeholder: (_, __) => Container(
+          placeholder: (context, url) => Container(
             width: size,
             height: size,
-            color: theme.colorScheme.surfaceVariant,
+            color: theme.colorScheme.surfaceContainerHighest,
           ),
-          errorWidget: (_, __, ___) => Container(
+          errorWidget: (context, url, error) => Container(
             width: size,
             height: size,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant,
+              color: theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(6),
             ),
             alignment: Alignment.center,

@@ -7,7 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:irondex/widgets/reviews/cards/machine_card.dart';
+import 'package:irondex/widgets/common/cards/machine_card.dart';
 
 void main() {
   testWidgets('MachineCard renders core information', (

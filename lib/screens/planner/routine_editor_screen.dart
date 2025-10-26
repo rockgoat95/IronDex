@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:irondex/models/catalog/machine.dart';
 import 'package:irondex/models/planner_routine.dart';
 import 'package:irondex/models/routine_exercise_draft.dart';
 import 'package:irondex/screens/planner/exercise_set_editor_screen.dart';
@@ -250,7 +251,7 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
       return;
     }
 
-    final selectedMachine = await showModalBottomSheet<Map<String, dynamic>>(
+    final selectedMachine = await showModalBottomSheet<Machine>(
       context: context,
       isScrollControlled: true,
       builder: (context) => const MachinePickerSheet(),
@@ -260,19 +261,17 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
       return;
     }
 
-    final brand = selectedMachine['brand'] as Map<String, dynamic>?;
-    final brandName = brand == null
-        ? null
-        : (brand['name'] ?? brand['name_kor'])?.toString();
+    final brand = selectedMachine.brand;
+    final brandName = brand?.resolvedName();
 
     setState(() {
       _exercises.add(
         RoutineExerciseDraft(
-          machineId: selectedMachine['id']?.toString() ?? '',
-          machineName: selectedMachine['name']?.toString() ?? '이름 없는 머신',
+          machineId: selectedMachine.id,
+          machineName: selectedMachine.name,
           brandName: brandName,
-          brandLogoUrl: brand?['logo_url']?.toString(),
-          imageUrl: selectedMachine['image_url']?.toString(),
+          brandLogoUrl: brand?.logoUrl,
+          imageUrl: selectedMachine.imageUrl,
           sets: const [
             RoutineExerciseSetDraft(
               order: 1,
@@ -660,7 +659,7 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                                   ? const _RoutineEmptyState()
                                   : ListView.separated(
                                       itemCount: _exercises.length,
-                                      separatorBuilder: (_, __) =>
+                    separatorBuilder: (context, _) =>
                                           const SizedBox(height: 12),
                                       itemBuilder: (context, index) {
                                         final exercise = _exercises[index];

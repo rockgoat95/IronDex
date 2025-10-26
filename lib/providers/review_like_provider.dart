@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:irondex/providers/auth_provider.dart';
-import 'package:irondex/services/review_repository.dart';
+import 'package:irondex/providers/base_remote_state_provider.dart';
+import 'package:irondex/services/repositories/review_repository.dart';
 
-class ReviewLikeProvider with ChangeNotifier {
+class ReviewLikeProvider extends BaseRemoteStateProvider {
   ReviewLikeProvider({AuthProvider? authProvider, ReviewRepository? repository})
     : _authProvider = authProvider,
       _repository = repository,
@@ -13,11 +13,6 @@ class ReviewLikeProvider with ChangeNotifier {
   String? _currentUserId;
 
   final Set<String> _likedReviewIds = <String>{};
-
-  bool _isFetching = false;
-  bool _initialized = false;
-
-  bool get isInitialized => _initialized;
 
   Set<String> get likedReviews => Set.unmodifiable(_likedReviewIds);
 
@@ -33,20 +28,20 @@ class ReviewLikeProvider with ChangeNotifier {
     _repository = repository;
 
     if (repositoryChanged) {
-      _initialized = false;
+      resetInitialization();
     }
 
     if (userChanged) {
       _currentUserId = newUserId;
       if (newUserId == null) {
         _likedReviewIds.clear();
-        _initialized = false;
-        notifyListeners();
+        resetInitialization(notify: true);
         return;
       }
+      resetInitialization();
     }
 
-    if (!_initialized && !_isFetching && _currentUserId != null) {
+    if (!isInitialized && !isFetching && _currentUserId != null) {
       refreshLikes();
     }
   }
@@ -66,21 +61,13 @@ class ReviewLikeProvider with ChangeNotifier {
       return;
     }
 
-    if (_isFetching) {
-      return;
-    }
-
-    _isFetching = true;
-    try {
+    await executeFetch(() async {
       final likes = await repository.fetchLikedReviewIds();
       _likedReviewIds
         ..clear()
         ..addAll(likes);
-      _initialized = true;
       notifyListeners();
-    } finally {
-      _isFetching = false;
-    }
+    });
   }
 
   Future<bool> toggleLike(String reviewId) async {

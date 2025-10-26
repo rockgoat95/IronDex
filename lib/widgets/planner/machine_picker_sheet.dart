@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:irondex/models/catalog/machine.dart';
 import 'package:irondex/widgets/reviews/lists/machine_list.dart';
 
 class MachinePickerSheet extends StatefulWidget {
@@ -130,7 +131,7 @@ class _MachinePickerSheetState extends State<MachinePickerSheet> {
                         parentScrollController: _scrollController,
                         searchQuery: _searchQuery,
                         standalone: true,
-                        onMachineTap: (machine) {
+                        onMachineTap: (Machine machine) {
                           Navigator.of(context).pop(machine);
                         },
                       ),

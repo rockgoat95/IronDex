@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:irondex/models/reviews/review.dart';
 import 'package:irondex/providers/auth_provider.dart';
 import 'package:irondex/providers/review_like_provider.dart';
-import 'package:irondex/services/review_repository.dart';
+import 'package:irondex/services/repositories/review_repository.dart';
 import 'package:provider/provider.dart';
 
 class ReviewCard extends StatefulWidget {
-  final Map<String, dynamic> review;
+  final Review review;
   final Future<void> Function()? onDeleted;
 
   const ReviewCard({super.key, required this.review, this.onDeleted});
@@ -25,56 +26,47 @@ class _ReviewCardState extends State<ReviewCard> {
   @override
   void initState() {
     super.initState();
-    likeCount = widget.review['like_count'] ?? 0;
+    likeCount = widget.review.likeCount;
   }
 
   @override
   void didUpdateWidget(covariant ReviewCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.review['id'] != widget.review['id'] ||
-        oldWidget.review['like_count'] != widget.review['like_count']) {
+    if (oldWidget.review.id != widget.review.id ||
+        oldWidget.review.likeCount != widget.review.likeCount) {
       setState(() {
-        likeCount = widget.review['like_count'] ?? likeCount;
+        likeCount = widget.review.likeCount;
       });
     }
   }
 
-  void _onLikePressed() {
-    final reviewId = widget.review['id']?.toString();
-    if (reviewId == null) {
-      return;
-    }
-
+  Future<void> _onLikePressed() async {
+    final reviewId = widget.review.id;
     final likeProvider = context.read<ReviewLikeProvider>();
 
-    likeProvider
-        .toggleLike(reviewId)
-        .then((isLikedNow) {
-          if (!mounted) {
-            return;
-          }
-          setState(() {
-            likeCount = isLikedNow
-                ? likeCount + 1
-                : (likeCount > 0 ? likeCount - 1 : 0);
-          });
-        })
-        .onError((error, stackTrace) {
-          if (!mounted) {
-            return;
-          }
-          final messenger = ScaffoldMessenger.of(context);
-          final message =
-              error is StateError && error.message == 'USER_NOT_LOGGED_IN'
-              ? '로그인 후 좋아요를 사용할 수 있습니다.'
-              : '좋아요 처리 중 오류가 발생했습니다.';
-          messenger.showSnackBar(SnackBar(content: Text(message)));
-        });
+    try {
+      final isLikedNow = await likeProvider.toggleLike(reviewId);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        likeCount = isLikedNow
+            ? likeCount + 1
+            : (likeCount > 0 ? likeCount - 1 : 0);
+      });
+    } on StateError catch (error) {
+      final message = error.message == 'USER_NOT_LOGGED_IN'
+          ? '로그인 후 좋아요를 사용할 수 있습니다.'
+          : '좋아요 처리 중 오류가 발생했습니다.';
+      _showSnackBar(message);
+    } catch (_) {
+      _showSnackBar('좋아요 처리 중 오류가 발생했습니다.');
+    }
   }
 
   Future<void> _onDeletePressed() async {
-    final reviewId = widget.review['id']?.toString();
-    if (reviewId == null || _isDeleting) {
+    final reviewId = widget.review.id;
+    if (_isDeleting) {
       return;
     }
 
@@ -112,16 +104,12 @@ class _ReviewCardState extends State<ReviewCard> {
         return;
       }
       await widget.onDeleted?.call();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('리뷰가 삭제되었습니다.')));
-    } catch (error) {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('리뷰 삭제 중 오류가 발생했습니다.')));
+      _showSnackBar('리뷰가 삭제되었습니다.');
+    } catch (error) {
+      _showSnackBar('리뷰 삭제 중 오류가 발생했습니다.');
     } finally {
       if (mounted) {
         setState(() {
@@ -148,23 +136,17 @@ class _ReviewCardState extends State<ReviewCard> {
     final authProvider = context.watch<AuthProvider>();
     final likeProvider = context.watch<ReviewLikeProvider>();
 
-    final reviewId = review['id']?.toString();
-    final comment = (review['comment']?.toString() ?? '').trim();
-    final rawImages = review['image_urls'] ?? review['img_urls'] ?? const [];
-    final imageUrls = rawImages is List
-        ? rawImages.whereType<String>().toList()
-        : <String>[];
+    final reviewId = review.id;
+    final comment = (review.comment ?? '').trim();
+    final imageUrls = review.imageUrls;
 
-    final ratingValue = review['rating'];
-    final rating = ratingValue is num ? ratingValue.toDouble() : 0.0;
-    final rawUser = (review['user'] as Map<String, dynamic>?) ?? const {};
-    final username = (rawUser['username']?.toString() ?? '').trim();
+    final rating = review.rating;
+    final username = (review.user?.username ?? '').trim();
     final displayName = username.isNotEmpty ? username : '익명 회원';
-    final createdAt = _formatCreatedAt(review['created_at']);
+    final createdAt = _formatCreatedAt(review.createdAt);
 
     final currentUserId = authProvider.currentUser?.id;
-    final isOwner =
-        currentUserId != null && review['user_id']?.toString() == currentUserId;
+    final isOwner = currentUserId != null && review.userId == currentUserId;
     final isLiked = likeProvider.isLiked(reviewId);
 
     final commentStyle = const TextStyle(
@@ -295,7 +277,7 @@ class _ReviewCardState extends State<ReviewCard> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: imageUrls.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  separatorBuilder: (context, _) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final url = imageUrls[index];
                     return ClipRRect(
@@ -305,7 +287,7 @@ class _ReviewCardState extends State<ReviewCard> {
                         width: 120,
                         height: 96,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
+                        errorBuilder: (context, error, stackTrace) => Container(
                           width: 120,
                           height: 96,
                           color: Colors.grey[300],
@@ -386,7 +368,7 @@ class _ReviewCardState extends State<ReviewCard> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  onPressed: _onLikePressed,
+                  onPressed: () => _onLikePressed(),
                   icon: Icon(
                     isLiked ? Icons.favorite : Icons.favorite_border,
                     color: isLiked ? Colors.redAccent : Colors.black54,
@@ -403,26 +385,20 @@ class _ReviewCardState extends State<ReviewCard> {
     );
   }
 
-  String? _formatCreatedAt(dynamic raw) {
-    if (raw == null) {
+  String? _formatCreatedAt(DateTime? value) {
+    if (value == null) {
       return null;
     }
 
-    DateTime? dt;
-    if (raw is DateTime) {
-      dt = raw.toLocal();
-    } else if (raw is String) {
-      try {
-        dt = DateTime.parse(raw).toLocal();
-      } catch (_) {
-        return raw;
-      }
-    }
+    return DateFormat('yyyy.MM.dd').format(value.toLocal());
+  }
 
-    if (dt == null) {
-      return null;
+  void _showSnackBar(String message) {
+    if (!mounted) {
+      return;
     }
-
-    return DateFormat('yyyy.MM.dd').format(dt);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 }

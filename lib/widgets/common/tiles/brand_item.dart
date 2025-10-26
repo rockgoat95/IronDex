@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:irondex/constants/ui_constants.dart';
 
 class BrandItem extends StatelessWidget {
-  final String name;
-  final String? image;
-  final bool isSelected;
-  final bool isPlusButton;
-  final bool isUpIcon;
-
   const BrandItem({
     super.key,
     required this.name,
@@ -16,14 +11,20 @@ class BrandItem extends StatelessWidget {
     this.isUpIcon = false,
   });
 
+  final String name;
+  final String? image;
+  final bool isSelected;
+  final bool isPlusButton;
+  final bool isUpIcon;
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-    final double tileWidth = constraints.maxWidth.isFinite
-      ? constraints.maxWidth
-      : 52;
-    final double cardSize = tileWidth >= 48 ? 48 : tileWidth;
+        final double tileWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : 52;
+        final double cardSize = tileWidth >= 48 ? 48 : tileWidth;
 
         if (isPlusButton) {
           return Column(
@@ -37,7 +38,7 @@ class BrandItem extends StatelessWidget {
                   color: Colors.white,
                   elevation: 2,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(kCompactCardRadius),
                   ),
                   child: Icon(
                     isUpIcon ? Icons.expand_less : Icons.add,
@@ -74,7 +75,7 @@ class BrandItem extends StatelessWidget {
               height: cardSize,
               decoration: isSelected
                   ? BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(kHighlightCardRadius),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.blue.withValues(alpha: 0.3),
@@ -89,7 +90,7 @@ class BrandItem extends StatelessWidget {
                 color: Colors.white,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(kCompactCardRadius),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: image != null

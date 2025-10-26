@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:irondex/models/catalog/machine.dart';
 import 'package:irondex/providers/auth_provider.dart';
 import 'package:irondex/providers/machine_favorite_provider.dart';
 import 'package:irondex/screens/reviews/review_create_screen.dart';
-import 'package:irondex/services/review_repository.dart';
+import 'package:irondex/services/repositories/review_repository.dart';
 import 'package:irondex/widgets/reviews/reviews.dart';
 import 'package:provider/provider.dart';
 
 class MachineReviewsScreen extends StatefulWidget {
   const MachineReviewsScreen({super.key, required this.machine});
 
-  final Map<String, dynamic> machine;
+  final Machine machine;
 
   @override
   State<MachineReviewsScreen> createState() => _MachineReviewsScreenState();
@@ -20,7 +21,8 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
   bool _checkingUserReview = true;
   int _refreshToken = 0;
 
-  String? get _machineId => widget.machine['id']?.toString();
+  String? get _machineId =>
+      widget.machine.id.isEmpty ? null : widget.machine.id;
 
   @override
   void initState() {
@@ -84,18 +86,28 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
     }
   }
 
+  void _showSnackBar(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final machine = widget.machine;
     final favoritesProvider = context.watch<MachineFavoriteProvider>();
     final machineId = _machineId;
     final isFavorite = favoritesProvider.isFavorite(machineId);
-    final brand = widget.machine['brand'] ?? <String, dynamic>{};
-    final brandName = (brand['name'] ?? brand['name_kor'])?.toString() ?? '';
+    final brand = machine.brand;
+    final brandName = brand?.resolvedName() ?? '';
 
     final bool showPrompt =
-        _machineId != null && (!_hasUserReview || _checkingUserReview);
+        machineId != null && (!_hasUserReview || _checkingUserReview);
     final bool showMessage =
-        _machineId != null && _hasUserReview && !_checkingUserReview;
+        machineId != null && _hasUserReview && !_checkingUserReview;
     final double reviewListSpacing = showPrompt
         ? 24
         : showMessage
@@ -117,16 +129,12 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
             SizedBox(
               height: 220,
               child: MachineCard(
-                name: widget.machine['name'] ?? '',
-                imageUrl: widget.machine['image_url'] ?? '',
+                name: machine.name,
+                imageUrl: machine.imageUrl ?? '',
                 brandName: brandName,
-                brandLogoUrl: brand['logo_url'] ?? '',
-                score: widget.machine['score'] != null
-                    ? double.tryParse(widget.machine['score'].toString())
-                    : null,
-                reviewCnt: widget.machine['review_cnt'] is int
-                    ? widget.machine['review_cnt'] as int
-                    : 0,
+                brandLogoUrl: brand?.logoUrl ?? '',
+                score: machine.score,
+                reviewCnt: machine.reviewCount,
                 isFavorite: isFavorite,
                 onFavoriteToggle: machineId == null
                     ? null
@@ -134,15 +142,9 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
                         try {
                           await favoritesProvider.toggleFavorite(machineId);
                         } on StateError {
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('로그인 후 이용해주세요.')),
-                          );
+                          _showSnackBar('로그인 후 이용해주세요.');
                         } catch (_) {
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('찜 처리 중 오류가 발생했습니다.')),
-                          );
+                          _showSnackBar('찜 처리 중 오류가 발생했습니다.');
                         }
                       },
               ),
@@ -153,10 +155,13 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
                 onTap: () async {
                   final created = await Navigator.of(context).push<bool>(
                     MaterialPageRoute(
-                      builder: (_) =>
-                          ReviewCreateScreen(machine: widget.machine),
+                      builder: (_) => ReviewCreateScreen(machine: machine),
                     ),
                   );
+
+                  if (!mounted) {
+                    return;
+                  }
 
                   if (created == true) {
                     await _handleReviewCreated();
@@ -172,10 +177,10 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
                 ),
               ),
             SizedBox(height: reviewListSpacing),
-            if (_machineId != null)
+            if (machineId != null)
               ReviewList(
-                machineType: widget.machine['type']?.toString(),
-                selectedMachineId: _machineId,
+                machineType: machine.type,
+                selectedMachineId: machineId,
                 refreshKey: _refreshToken,
               )
             else
