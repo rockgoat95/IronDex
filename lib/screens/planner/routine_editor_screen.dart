@@ -7,9 +7,9 @@ import 'package:irondex/models/planner_routine.dart';
 import 'package:irondex/models/routine_exercise_draft.dart';
 import 'package:irondex/screens/planner/exercise_set_editor_screen.dart';
 import 'package:irondex/services/planner_repository.dart';
-import 'package:irondex/widgets/planner/exercise_type_picker_sheet.dart';
-import 'package:irondex/widgets/planner/machine_picker_sheet.dart';
-import 'package:irondex/widgets/planner/machine_summary_card.dart';
+import 'package:irondex/widgets/planner/cards/machine_summary_card.dart';
+import 'package:irondex/widgets/planner/sheets/exercise_type_picker_sheet.dart';
+import 'package:irondex/widgets/planner/sheets/machine_picker_sheet.dart';
 
 class RoutineEditorScreen extends StatefulWidget {
   const RoutineEditorScreen({super.key, required this.targetDate});
@@ -95,10 +95,14 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
       debugPrintStack(stackTrace: stackTrace);
       if (!mounted) return;
       setState(() {
-        _loadError = '루틴 정보를 불러오지 못했습니다.';
+        _loadError = 'Failed to load routine information.';
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('루틴 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')),
+        const SnackBar(
+          content: Text(
+            'Unable to load the routine. Please try again shortly.',
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -189,8 +193,8 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
       });
 
       if (!isAuto) {
-        final message = manualMessage == null || manualMessage.isEmpty
-            ? '변경 사항이 저장되었습니다.'
+        final message = (manualMessage == null || manualMessage.isEmpty)
+            ? 'Changes have been saved.'
             : manualMessage;
         if (message.isNotEmpty) {
           ScaffoldMessenger.of(
@@ -215,7 +219,9 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('루틴 저장 중 문제가 발생했습니다. 다시 시도해주세요.')),
+        const SnackBar(
+          content: Text('Something went wrong while saving. Please try again.'),
+        ),
       );
     } finally {
       if (mounted) {
@@ -245,9 +251,9 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
     }
 
     if (type == RoutineExerciseSource.freeWeight) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('프리웨이트 항목은 곧 추가될 예정입니다.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Free-weight exercises are coming soon.')),
+      );
       return;
     }
 
@@ -262,7 +268,7 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
     }
 
     final brand = selectedMachine.brand;
-    final brandName = brand?.resolvedName();
+    final brandName = brand?.resolvedName(preferKorean: false);
 
     setState(() {
       _exercises.add(
@@ -415,16 +421,24 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
     }
 
     if (_exercises.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('최소 한 개 이상의 운동을 추가해주세요.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Add at least one exercise before completing the routine.',
+          ),
+        ),
+      );
       return false;
     }
 
     final hasEmptySets = _exercises.any((exercise) => exercise.sets.isEmpty);
     if (hasEmptySets) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('모든 운동에 최소 한 개 이상의 세트를 추가해주세요.')),
+        const SnackBar(
+          content: Text(
+            'Add at least one set for every exercise before completing the routine.',
+          ),
+        ),
       );
       return false;
     }
@@ -476,9 +490,9 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
 
     if (success) {
       _shouldNotifySaveOnExit = true;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('루틴을 완료로 저장했습니다.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Routine marked as completed.')),
+      );
     }
 
     return success;
@@ -527,9 +541,9 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
 
     if (success) {
       _shouldNotifySaveOnExit = true;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('루틴을 다시 작성 상태로 변경했습니다.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Routine moved back to draft.')),
+      );
     }
 
     return success;
@@ -555,9 +569,9 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
     if (_autoSaveInProgress ||
         _manualSaveInProgress ||
         _completionActionInProgress) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('저장 중입니다. 잠시만 기다려주세요.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Saving in progress. Please wait.')),
+      );
       return false;
     }
 
@@ -659,7 +673,7 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                                   ? const _RoutineEmptyState()
                                   : ListView.separated(
                                       itemCount: _exercises.length,
-                    separatorBuilder: (context, _) =>
+                                      separatorBuilder: (context, _) =>
                                           const SizedBox(height: 12),
                                       itemBuilder: (context, index) {
                                         final exercise = _exercises[index];
@@ -689,7 +703,7 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                                                   icon: const Icon(
                                                     Icons.delete_outline,
                                                   ),
-                                                  tooltip: '삭제',
+                                                  tooltip: 'Delete',
                                                 ),
                                               ),
                                             ],

@@ -37,7 +37,7 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
     super.initState();
     final machine = widget.machine;
     final brand = machine.brand;
-    final brandName = brand?.resolvedName();
+    final brandName = brand?.resolvedName(preferKorean: false);
     _selectedMachineId = machine.id;
     _selectedMachineName = machine.name;
     _selectedMachineBrandName = brandName;

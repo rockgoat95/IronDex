@@ -1,3 +1,5 @@
+import 'package:irondex/constants/app_preferences.dart';
+
 class Brand {
   const Brand({
     required this.id,
@@ -29,8 +31,9 @@ class Brand {
     };
   }
 
-  String resolvedName({bool preferKorean = true}) {
-    if (preferKorean && nameKor != null && nameKor!.isNotEmpty) {
+  String resolvedName({bool? preferKorean}) {
+    final preferKor = preferKorean ?? AppPreferences.preferKoreanBrandNames;
+    if (preferKor && nameKor != null && nameKor!.isNotEmpty) {
       return nameKor!;
     }
     return name.isNotEmpty ? name : nameKor ?? '';

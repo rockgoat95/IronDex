@@ -316,7 +316,7 @@ class _MachineTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brand = machine.brand;
-    final brandName = brand?.resolvedName() ?? '';
+    final brandName = brand?.resolvedName(preferKorean: false) ?? '';
     final machineId = machine.id;
     final hasValidId = machineId.isNotEmpty;
     final isFavorite = hasValidId && favoritesProvider.isFavorite(machineId);

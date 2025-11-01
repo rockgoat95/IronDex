@@ -46,7 +46,7 @@ class PlannerCalendar extends StatelessWidget {
         fontWeight: FontWeight.bold,
       ),
       bottomBarTextStyle: theme.textTheme.bodyMedium,
-      expandableDateFormat: 'yyyy년 M월 d일 EEEE',
+      expandableDateFormat: 'MMMM d, yyyy (EEEE)',
     );
   }
 

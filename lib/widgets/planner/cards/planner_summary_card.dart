@@ -59,7 +59,7 @@ class PlannerSummaryCard extends StatelessWidget {
                 )
               else if (routine == null)
                 Text(
-                  '아직 루틴이 없습니다. 오늘의 머신 루틴을 계획해보세요.',
+                  'No routine yet. Plan today\'s machine workout.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

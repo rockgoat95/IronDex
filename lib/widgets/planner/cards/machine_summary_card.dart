@@ -44,7 +44,8 @@ class MachineSummaryCard extends StatelessWidget {
     final effectiveSubtitle =
         subtitle ??
         (showSetCount && count > 0
-            ? (setCountLabelBuilder?.call(count) ?? '$count개의 세트 정보')
+            ? (setCountLabelBuilder?.call(count) ??
+                  _defaultSetCountLabel(count))
             : null);
 
     Widget cardContent = Container(
@@ -107,6 +108,13 @@ class MachineSummaryCard extends StatelessWidget {
 
     return Padding(padding: margin ?? EdgeInsets.zero, child: cardContent);
   }
+
+  String _defaultSetCountLabel(int count) {
+    if (count == 1) {
+      return '1 set logged';
+    }
+    return '$count sets logged';
+  }
 }
 
 class _MachineThumbnail extends StatelessWidget {
@@ -121,7 +129,7 @@ class _MachineThumbnail extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       alignment: Alignment.center,
@@ -169,7 +177,10 @@ class _BrandInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title = brandName?.isNotEmpty == true ? brandName! : '머신';
+    const defaultBrandTitle = 'Machine';
+    final title = brandName?.isNotEmpty == true
+        ? brandName!
+        : defaultBrandTitle;
 
     Widget buildLogo() {
       const double size = 24;

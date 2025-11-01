@@ -350,7 +350,7 @@ class PlannerRepository {
 
     return RoutineExerciseDraft(
       machineId: machineId,
-      machineName: machineName ?? '머신',
+      machineName: machineName ?? 'Machine',
       brandName: brandName,
       brandLogoUrl: brandLogoUrl,
       imageUrl: imageUrl,

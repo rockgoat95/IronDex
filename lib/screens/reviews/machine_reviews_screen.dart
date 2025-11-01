@@ -90,9 +90,9 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -102,7 +102,7 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
     final machineId = _machineId;
     final isFavorite = favoritesProvider.isFavorite(machineId);
     final brand = machine.brand;
-    final brandName = brand?.resolvedName() ?? '';
+    final brandName = brand?.resolvedName(preferKorean: false) ?? '';
 
     final bool showPrompt =
         machineId != null && (!_hasUserReview || _checkingUserReview);

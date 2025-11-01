@@ -52,3 +52,15 @@ Quadriceps, Hamstrings, Core, Full Body, Hip, Calves, Mitral, ETC
  - 너무 개입이 적은 근육은 제외해주세요
 **응답은 반드시 카테고리 리스트만 출력해주세요. 예: ["Chest", "Back"]**
 """
+
+FREEWEIGHT_EXERCISE_TRANSLATION_PROMPT = """
+다음 헬스 운동 이름을 자연스럽고 간결한 한국어로 번역해주세요.
+
+운동 이름: {exercise_name}
+
+- 일반적으로 헬스장에서 쓰는 표현을 사용해주세요.
+- 대문자 약어같은 것은 번역하지 그대로 두세요.
+- 번역이 아니라, 원어를 그대로 사용하는 것이 자연스러운 경우 한글로 발음을 표기해주세요.
+
+**응답은 번역된 운동 이름만 출력해주세요.**
+"""

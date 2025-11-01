@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:irondex/models/routine_exercise_draft.dart';
-import 'package:irondex/widgets/planner/machine_summary_card.dart';
+import 'package:irondex/widgets/planner/cards/machine_summary_card.dart';
 
 const double _columnSpacing = 8;
 
@@ -89,7 +89,7 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
             ),
           ];
     _entries = initialSets
-  .map((set) => _SetFormEntry(initialSet: set))
+        .map((set) => _SetFormEntry(initialSet: set))
         .toList(growable: true);
   }
 
@@ -105,7 +105,7 @@ class _ExerciseSetEditorScreenState extends State<ExerciseSetEditorScreen> {
     setState(() {
       final nextOrder = _entries.length + 1;
       _entries.add(
-  _SetFormEntry(initialSet: RoutineExerciseSetDraft(order: nextOrder)),
+        _SetFormEntry(initialSet: RoutineExerciseSetDraft(order: nextOrder)),
       );
     });
   }
@@ -683,7 +683,7 @@ class _TypeBadge extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-  color: theme.colorScheme.surfaceContainerHighest,
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       alignment: Alignment.center,
@@ -702,9 +702,7 @@ class _SetFormEntry {
   _SetFormEntry({required RoutineExerciseSetDraft initialSet})
     : set = initialSet,
       weightController = TextEditingController(
-        text: initialSet.weight != null
-            ? initialSet.weight!.toString()
-            : '-',
+        text: initialSet.weight != null ? initialSet.weight!.toString() : '-',
       ),
       repsController = TextEditingController(
         text: initialSet.reps != null ? initialSet.reps!.toString() : '-',
