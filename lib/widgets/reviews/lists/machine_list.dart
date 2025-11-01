@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:irondex/models/catalog/machine.dart';
 import 'package:irondex/providers/machine_favorite_provider.dart';
-import 'package:irondex/services/review_repository.dart';
-import 'package:irondex/widgets/reviews/cards/machine_card.dart';
+import 'package:irondex/services/repositories/machine_repository.dart';
+import 'package:irondex/widgets/common/cards/machine_card.dart';
 import 'package:provider/provider.dart';
 
 class MachineList extends StatefulWidget {
@@ -21,7 +22,7 @@ class MachineList extends StatefulWidget {
   final List<String>? bodyParts;
   final String? machineType;
   final String? searchQuery;
-  final ValueChanged<Map<String, dynamic>>? onMachineTap;
+  final ValueChanged<Machine>? onMachineTap;
   final ScrollController? parentScrollController;
   final bool standalone;
 
@@ -32,7 +33,7 @@ class MachineList extends StatefulWidget {
 class _MachineListState extends State<MachineList> {
   static const int _pageSize = 10;
 
-  List<Map<String, dynamic>> _machines = [];
+  List<Machine> _machines = <Machine>[];
   bool _isInitialLoading = true;
   bool _isLoadingMore = false;
   bool _hasMore = true;
@@ -167,7 +168,7 @@ class _MachineListState extends State<MachineList> {
       });
     }
 
-    final repository = context.read<ReviewRepository>();
+    final repository = context.read<MachineRepository>();
 
     try {
       final result = await repository.fetchMachines(
@@ -185,10 +186,9 @@ class _MachineListState extends State<MachineList> {
 
       setState(() {
         if (reset) {
-          _machines = List<Map<String, dynamic>>.from(result);
+          _machines = List<Machine>.from(result);
         } else {
-          _machines = List<Map<String, dynamic>>.from(_machines)
-            ..addAll(result);
+          _machines = List<Machine>.from(_machines)..addAll(result);
         }
         _offset += result.length;
         _hasMore = result.length == _pageSize;
@@ -309,34 +309,30 @@ class _MachineTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final Map<String, dynamic> machine;
+  final Machine machine;
   final MachineFavoriteProvider favoritesProvider;
-  final ValueChanged<Map<String, dynamic>>? onTap;
+  final ValueChanged<Machine>? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final brand = machine['brand'] ?? {};
-    final brandName = (brand['name'] ?? brand['name_kor'] ?? '').toString();
-    final machineId = machine['id']?.toString();
-    final isFavorite = favoritesProvider.isFavorite(machineId);
+    final brand = machine.brand;
+    final brandName = brand?.resolvedName(preferKorean: false) ?? '';
+    final machineId = machine.id;
+    final hasValidId = machineId.isNotEmpty;
+    final isFavorite = hasValidId && favoritesProvider.isFavorite(machineId);
 
     return GestureDetector(
       onTap: () => onTap?.call(machine),
       child: MachineCard(
-        name: machine['name'] ?? '',
-        imageUrl: machine['image_url'] ?? '',
+        name: machine.name,
+        imageUrl: machine.imageUrl ?? '',
         brandName: brandName,
-        brandLogoUrl: brand['logo_url'] ?? '',
-        score: machine['score'] != null
-            ? double.tryParse(machine['score'].toString())
-            : null,
-        reviewCnt: machine['review_cnt'] is int
-            ? machine['review_cnt'] as int
-            : 0,
+        brandLogoUrl: brand?.logoUrl ?? '',
+        score: machine.score,
+        reviewCnt: machine.reviewCount,
         isFavorite: isFavorite,
-        onFavoriteToggle: machineId == null
-            ? null
-            : () async {
+        onFavoriteToggle: hasValidId
+            ? () async {
                 try {
                   await favoritesProvider.toggleFavorite(machineId);
                 } on StateError {
@@ -350,7 +346,8 @@ class _MachineTile extends StatelessWidget {
                     const SnackBar(content: Text('찜 처리 중 오류가 발생했습니다.')),
                   );
                 }
-              },
+              }
+            : null,
       ),
     );
   }

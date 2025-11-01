@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:irondex/models/catalog/machine.dart';
 import 'package:irondex/widgets/reviews/lists/machine_list.dart';
 
 class MachinePickerSheet extends StatefulWidget {
@@ -77,7 +78,7 @@ class _MachinePickerSheetState extends State<MachinePickerSheet> {
                   children: [
                     Expanded(
                       child: Text(
-                        '머신 선택',
+                        'Select Machine',
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
@@ -85,7 +86,7 @@ class _MachinePickerSheetState extends State<MachinePickerSheet> {
                     IconButton(
                       onPressed: () => Navigator.of(context).maybePop(),
                       icon: const Icon(Icons.close),
-                      tooltip: '닫기',
+                      tooltip: 'Close',
                     ),
                   ],
                 ),
@@ -98,7 +99,7 @@ class _MachinePickerSheetState extends State<MachinePickerSheet> {
                   onChanged: _onSearchChanged,
                   onSubmitted: _onSearchSubmitted,
                   decoration: InputDecoration(
-                    hintText: '머신 이름 검색',
+                    hintText: 'Search machine name',
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: (_searchController.text.isEmpty)
                         ? null
@@ -111,7 +112,7 @@ class _MachinePickerSheetState extends State<MachinePickerSheet> {
                               });
                             },
                             icon: const Icon(Icons.clear),
-                            tooltip: '검색어 지우기',
+                            tooltip: 'Clear search',
                           ),
                     border: const OutlineInputBorder(),
                   ),
@@ -130,7 +131,7 @@ class _MachinePickerSheetState extends State<MachinePickerSheet> {
                         parentScrollController: _scrollController,
                         searchQuery: _searchQuery,
                         standalone: true,
-                        onMachineTap: (machine) {
+                        onMachineTap: (Machine machine) {
                           Navigator.of(context).pop(machine);
                         },
                       ),

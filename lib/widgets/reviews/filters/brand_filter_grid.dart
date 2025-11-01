@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:irondex/services/review_repository.dart';
-import 'package:irondex/widgets/reviews/components/brand_item.dart';
+import 'package:irondex/models/catalog/brand.dart';
+import 'package:irondex/services/repositories/brand_repository.dart';
+import 'package:irondex/widgets/common/tiles/brand_item.dart';
 import 'package:provider/provider.dart';
 
 class BrandFilterGrid extends StatefulWidget {
@@ -18,7 +19,7 @@ class BrandFilterGrid extends StatefulWidget {
 }
 
 class _BrandFilterGridState extends State<BrandFilterGrid> {
-  late Future<List<Map<String, dynamic>>> _brandsFuture;
+  late Future<List<Brand>> _brandsFuture;
   bool _isExpanded = false;
   final ScrollController _scrollController = ScrollController();
 
@@ -30,7 +31,7 @@ class _BrandFilterGridState extends State<BrandFilterGrid> {
   @override
   void initState() {
     super.initState();
-    _brandsFuture = context.read<ReviewRepository>().fetchBrands();
+    _brandsFuture = context.read<BrandRepository>().fetchBrands();
   }
 
   @override
@@ -41,7 +42,7 @@ class _BrandFilterGridState extends State<BrandFilterGrid> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Map<String, dynamic>>>(
+    return FutureBuilder<List<Brand>>(
       future: _brandsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -53,7 +54,7 @@ class _BrandFilterGridState extends State<BrandFilterGrid> {
         if (snapshot.hasError) {
           return const Text('브랜드 정보를 불러올 수 없습니다');
         }
-        final brands = snapshot.data ?? [];
+        final brands = snapshot.data ?? <Brand>[];
 
         if (_isExpanded) {
           return Column(
@@ -81,16 +82,15 @@ class _BrandFilterGridState extends State<BrandFilterGrid> {
                     itemCount: brands.length,
                     itemBuilder: (context, index) {
                       final brand = brands[index];
-                      final brandId = brand['id']?.toString();
-                      final isSelected = widget.selectedBrandId == brandId;
+                      final isSelected = widget.selectedBrandId == brand.id;
 
                       return GestureDetector(
                         onTap: () {
-                          widget.onBrandSelected(isSelected ? null : brandId);
+                          widget.onBrandSelected(isSelected ? null : brand.id);
                         },
                         child: BrandItem(
-                          name: brand['name'] ?? '',
-                          image: brand['logo_url'],
+                          name: brand.resolvedName(),
+                          image: brand.logoUrl,
                           isSelected: isSelected,
                         ),
                       );
@@ -164,16 +164,15 @@ class _BrandFilterGridState extends State<BrandFilterGrid> {
             }
 
             final brand = brands[index];
-            final brandId = brand['id']?.toString();
-            final isSelected = widget.selectedBrandId == brandId;
+            final isSelected = widget.selectedBrandId == brand.id;
 
             return GestureDetector(
               onTap: () {
-                widget.onBrandSelected(isSelected ? null : brandId);
+                widget.onBrandSelected(isSelected ? null : brand.id);
               },
               child: BrandItem(
-                name: brand['name'] ?? '',
-                image: brand['logo_url'],
+                name: brand.resolvedName(),
+                image: brand.logoUrl,
                 isSelected: isSelected,
               ),
             );

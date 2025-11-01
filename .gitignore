@@ -75,5 +75,5 @@ CLAUDE.md
 .metadata
 .venv/
 scripts/data_setup/init_data/
-scripts/data_setup/data/
 google-chrome-stable_current_amd64.deb
+scripts/data_setup/data/

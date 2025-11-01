@@ -2,15 +2,16 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:irondex/models/catalog/machine.dart';
 import 'package:irondex/providers/auth_provider.dart';
-import 'package:irondex/services/review_repository.dart';
+import 'package:irondex/services/repositories/review_repository.dart';
 import 'package:irondex/widgets/reviews/reviews.dart';
 import 'package:provider/provider.dart';
 
 class ReviewCreateScreen extends StatefulWidget {
   const ReviewCreateScreen({super.key, required this.machine});
 
-  final Map<String, dynamic> machine;
+  final Machine machine;
 
   @override
   State<ReviewCreateScreen> createState() => _ReviewCreateScreenState();
@@ -35,13 +36,13 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
   void initState() {
     super.initState();
     final machine = widget.machine;
-    final brand = (machine['brand'] as Map<String, dynamic>?) ?? {};
-    final brandName = (brand['name'] ?? brand['name_kor'])?.toString();
-    _selectedMachineId = machine['id']?.toString();
-    _selectedMachineName = machine['name']?.toString();
+    final brand = machine.brand;
+    final brandName = brand?.resolvedName(preferKorean: false);
+    _selectedMachineId = machine.id;
+    _selectedMachineName = machine.name;
     _selectedMachineBrandName = brandName;
-    _selectedMachineImageUrl = machine['image_url']?.toString();
-    _selectedMachineBrandLogoUrl = brand['logo_url']?.toString();
+    _selectedMachineImageUrl = machine.imageUrl;
+    _selectedMachineBrandLogoUrl = brand?.logoUrl;
   }
 
   @override

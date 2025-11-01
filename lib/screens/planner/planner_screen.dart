@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:irondex/models/planner_routine.dart';
 import 'package:irondex/screens/planner/routine_editor_screen.dart';
 import 'package:irondex/services/planner_repository.dart';
-import 'package:irondex/widgets/planner/planner_calendar.dart';
-import 'package:irondex/widgets/planner/planner_summary_card.dart';
-import 'package:irondex/widgets/planner/routine_actions_sheet.dart';
+import 'package:irondex/widgets/planner/calendar/planner_calendar.dart';
+import 'package:irondex/widgets/planner/cards/planner_summary_card.dart';
+import 'package:irondex/widgets/planner/sheets/routine_actions_sheet.dart';
 
 DateTime _stripTime(DateTime date) => DateTime(date.year, date.month, date.day);
 
@@ -74,7 +74,7 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
         return;
       }
       setState(() {
-        _routineError = '루틴 정보를 불러오지 못했습니다.';
+        _routineError = 'Failed to load routine information.';
         _selectedRoutine = null;
       });
     } finally {
@@ -134,7 +134,11 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
 
     if (hasIncomplete) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('완료되지 않은 루틴이 있습니다. 이어서 작성해보세요.')),
+        const SnackBar(
+          content: Text(
+            'You have an unfinished routine. Pick up where you left off.',
+          ),
+        ),
       );
     }
 
@@ -173,11 +177,14 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
           Icons.check_circle_outline,
           color: theme.colorScheme.primary,
         ),
-        content: Text('변경 사항이 저장되었습니다.', style: theme.textTheme.bodyMedium),
+        content: Text(
+          'Changes have been saved.',
+          style: theme.textTheme.bodyMedium,
+        ),
         actions: [
           TextButton(
             onPressed: messenger.hideCurrentMaterialBanner,
-            child: const Text('닫기'),
+            child: const Text('Close'),
           ),
         ],
       ),

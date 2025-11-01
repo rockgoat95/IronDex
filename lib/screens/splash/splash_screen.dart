@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:irondex/services/review_repository.dart';
+import 'package:irondex/services/repositories/machine_repository.dart';
 import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -22,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initializeApp() async {
     try {
-      final repository = context.read<ReviewRepository>();
+      final repository = context.read<MachineRepository>();
       await repository.fetchMachines(limit: 10);
     } catch (_) {
       // 초기 부팅 시 실패해도 이어서 진행

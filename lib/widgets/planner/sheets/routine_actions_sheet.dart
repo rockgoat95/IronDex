@@ -62,7 +62,7 @@ class RoutineActionsSheet extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '완료되지 않은 루틴이 있습니다. 이어서 완료해보세요.',
+                          'You have an unfinished routine. Continue to complete it.',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -84,13 +84,15 @@ class RoutineActionsSheet extends StatelessWidget {
                     icon: hasIncompleteDraft
                         ? Icons.playlist_add_check
                         : Icons.add_circle_outline,
-                    label: hasIncompleteDraft ? '루틴 이어서 작성하기' : '새 루틴 만들기',
+                    label: hasIncompleteDraft
+                        ? 'Resume Routine Draft'
+                        : 'Create New Routine',
                     onTap: onCreateRoutine,
                   ),
                   const SizedBox(height: 12),
                   _RoutineActionTile(
                     icon: Icons.history_rounded,
-                    label: '지난 루틴 불러오기',
+                    label: 'Load Past Routine',
                     onTap: () async {
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(

@@ -17,7 +17,7 @@ class ExerciseTypePickerSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              '운동 추가',
+              'Add Exercise',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -26,16 +26,16 @@ class ExerciseTypePickerSheet extends StatelessWidget {
             const SizedBox(height: 24),
             _ExerciseTypeButton(
               icon: Icons.fitness_center,
-              label: '프리웨이트',
-              description: '바벨, 덤벨 등 자유 중량 운동',
+              label: 'Free Weight',
+              description: 'Barbells, dumbbells, and other free-weight moves',
               onTap: () =>
                   Navigator.of(context).pop(RoutineExerciseSource.freeWeight),
             ),
             const SizedBox(height: 16),
             _ExerciseTypeButton(
               icon: Icons.precision_manufacturing,
-              label: '머신',
-              description: 'IronDex 머신 데이터 선택',
+              label: 'Machine',
+              description: 'Choose from the IronDex machine catalog',
               onTap: () =>
                   Navigator.of(context).pop(RoutineExerciseSource.machine),
             ),

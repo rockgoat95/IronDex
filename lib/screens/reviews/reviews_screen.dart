@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:irondex/models/catalog/machine.dart';
 import 'package:irondex/providers/catalog_provider.dart';
 import 'package:irondex/screens/reviews/machine_reviews_screen.dart';
 import 'package:irondex/widgets/reviews/reviews.dart';
@@ -37,7 +38,7 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
     _filterProvider.selectBrand(brandId);
   }
 
-  void _onMachineTapped(Map<String, dynamic> machine) {
+  void _onMachineTapped(Machine machine) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => MachineReviewsScreen(machine: machine)),

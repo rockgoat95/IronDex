@@ -108,7 +108,6 @@ def save_to_file(records: list[dict], output_path: Path) -> None:
 
 def get_exercises() -> None:
     exercises = _fetch_all_exercises()
-
     save_to_file(exercises, EXERCISE_DATA_FILE)
 
     print(f"Saved {len(exercises)} exercises to {EXERCISE_DATA_FILE}")
@@ -150,6 +149,15 @@ def download_images_from_dataset() -> None:
         exercise_id = str(record.get("id") or record.get("exerciseId"))
         if not exercise_id or exercise_id.lower() == "none":
             print("Skipping record without valid id", file=sys.stderr)
+            continue
+
+        existing_image = next(IMAGES_DIR.glob(f"{exercise_id}.*"), None)
+        if existing_image is not None:
+            message = (
+                f"Image already exists for {exercise_id}: "
+                f"{existing_image.name}. Skipping download."
+            )
+            print(message, file=sys.stderr)
             continue
 
         try:

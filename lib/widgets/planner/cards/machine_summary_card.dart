@@ -44,7 +44,8 @@ class MachineSummaryCard extends StatelessWidget {
     final effectiveSubtitle =
         subtitle ??
         (showSetCount && count > 0
-            ? (setCountLabelBuilder?.call(count) ?? '$count개의 세트 정보')
+            ? (setCountLabelBuilder?.call(count) ??
+                  _defaultSetCountLabel(count))
             : null);
 
     Widget cardContent = Container(
@@ -107,6 +108,13 @@ class MachineSummaryCard extends StatelessWidget {
 
     return Padding(padding: margin ?? EdgeInsets.zero, child: cardContent);
   }
+
+  String _defaultSetCountLabel(int count) {
+    if (count == 1) {
+      return '1 set logged';
+    }
+    return '$count sets logged';
+  }
 }
 
 class _MachineThumbnail extends StatelessWidget {
@@ -121,7 +129,7 @@ class _MachineThumbnail extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       alignment: Alignment.center,
@@ -143,18 +151,18 @@ class _MachineThumbnail extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Container(
+        placeholder: (context, url) => Container(
           width: size,
           height: size,
           alignment: Alignment.center,
-          color: Theme.of(context).colorScheme.surfaceVariant,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           child: const SizedBox(
             width: 20,
             height: 20,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
         ),
-        errorWidget: (_, __, ___) => placeholder,
+        errorWidget: (context, url, error) => placeholder,
       ),
     );
   }
@@ -169,7 +177,10 @@ class _BrandInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title = brandName?.isNotEmpty == true ? brandName! : '머신';
+    const defaultBrandTitle = 'Machine';
+    final title = brandName?.isNotEmpty == true
+        ? brandName!
+        : defaultBrandTitle;
 
     Widget buildLogo() {
       const double size = 24;
@@ -178,7 +189,7 @@ class _BrandInfo extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant,
+            color: theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(6),
           ),
           alignment: Alignment.center,
@@ -197,16 +208,16 @@ class _BrandInfo extends StatelessWidget {
           width: size,
           height: size,
           fit: BoxFit.contain,
-          placeholder: (_, __) => Container(
+          placeholder: (context, url) => Container(
             width: size,
             height: size,
-            color: theme.colorScheme.surfaceVariant,
+            color: theme.colorScheme.surfaceContainerHighest,
           ),
-          errorWidget: (_, __, ___) => Container(
+          errorWidget: (context, url, error) => Container(
             width: size,
             height: size,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant,
+              color: theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(6),
             ),
             alignment: Alignment.center,
