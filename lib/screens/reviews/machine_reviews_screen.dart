@@ -142,9 +142,11 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
                         try {
                           await favoritesProvider.toggleFavorite(machineId);
                         } on StateError {
-                          _showSnackBar('로그인 후 이용해주세요.');
+                          _showSnackBar('Please log in to continue.');
                         } catch (_) {
-                          _showSnackBar('찜 처리 중 오류가 발생했습니다.');
+                          _showSnackBar(
+                            'An error occurred while updating favorites.',
+                          );
                         }
                       },
               ),
@@ -184,7 +186,7 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
                 refreshKey: _refreshToken,
               )
             else
-              const Center(child: Text('머신 정보를 불러오지 못했습니다.')),
+              const Center(child: Text('Unable to load machine information.')),
           ],
         ),
       ),

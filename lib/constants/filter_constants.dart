@@ -1,5 +1,5 @@
 class FilterConstants {
-  // 운동 부위 - 해부학적으로 고정된 분류
+  // Body parts - anatomically fixed grouping
   static const List<String> bodyParts = [
     'Chest',
     'Back',
@@ -10,7 +10,7 @@ class FilterConstants {
     'Full Body',
   ];
 
-  // 머신 타입 - 기계적 분류
+  // Machine types - mechanical grouping
   static const List<String> machineTypes = [
     'Cable Machine',
     'Plate Loaded',
@@ -20,7 +20,7 @@ class FilterConstants {
     'Smith Machine',
   ];
 
-  // 필터 초기값
+  // Default filter values
   static const Map<String, dynamic> defaultFilters = {
     'bodyParts': <String>[],
     'machineType': '',

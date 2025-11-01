@@ -12,13 +12,16 @@ class SettingsScreen extends StatelessWidget {
     final user = authProvider.currentUser;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('설정')),
+      appBar: AppBar(title: const Text('Settings')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('로그인 상태', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Login Status',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Card(
               child: ListTile(
@@ -28,10 +31,10 @@ class SettingsScreen extends StatelessWidget {
                       ? Theme.of(context).colorScheme.primary
                       : Colors.grey[500],
                 ),
-                title: Text(isLoggedIn ? '로그인됨' : '로그아웃됨'),
+                title: Text(isLoggedIn ? 'Logged In' : 'Logged Out'),
                 subtitle: isLoggedIn && user != null
                     ? Text(user.email ?? user.id)
-                    : const Text('세션 정보 없음'),
+                    : const Text('No session information'),
               ),
             ),
             const SizedBox(height: 24),
@@ -39,13 +42,15 @@ class SettingsScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.logout),
-                label: const Text('로그아웃'),
+                label: const Text('Log Out'),
                 onPressed: isLoggedIn
                     ? () async {
                         await authProvider.signOut();
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('로그아웃 되었습니다.')),
+                          const SnackBar(
+                            content: Text('You have been logged out.'),
+                          ),
                         );
                       }
                     : null,
@@ -53,7 +58,9 @@ class SettingsScreen extends StatelessWidget {
             ),
             if (!isLoggedIn) ...[
               const SizedBox(height: 12),
-              const Text('현재 로그인이 되어 있지 않습니다. 디버깅을 위해 인증 화면으로 이동하세요.'),
+              const Text(
+                'You are not logged in. Navigate to the authentication screen for debugging.',
+              ),
             ],
           ],
         ),

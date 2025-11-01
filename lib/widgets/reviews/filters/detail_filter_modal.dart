@@ -70,7 +70,7 @@ class _DetailFilterModalState extends State<DetailFilterModal> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                '세부 필터',
+                'Detailed Filters',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               IconButton(
@@ -96,7 +96,7 @@ class _DetailFilterModalState extends State<DetailFilterModal> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            '선택된 부위',
+                            'Selected Body Parts',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -113,7 +113,7 @@ class _DetailFilterModalState extends State<DetailFilterModal> {
                     const SizedBox(height: 20),
                   ],
                   _buildFilterSection(
-                    '머신 타입',
+                    'Machine Type',
                     FilterConstants.machineTypes,
                     selectedType != null ? [selectedType!] : [],
                     (value) {
@@ -137,7 +137,7 @@ class _DetailFilterModalState extends State<DetailFilterModal> {
                       selectedType = null;
                     });
                   },
-                  child: const Text('초기화'),
+                  child: const Text('Reset'),
                 ),
               ),
               const SizedBox(width: 16),
@@ -147,7 +147,7 @@ class _DetailFilterModalState extends State<DetailFilterModal> {
                     widget.onDetailFilterChanged(selectedType);
                     Navigator.pop(context);
                   },
-                  child: const Text('적용'),
+                  child: const Text('Apply'),
                 ),
               ),
             ],

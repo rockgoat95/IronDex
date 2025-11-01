@@ -119,7 +119,9 @@ class _RoutineStatusBar extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              routine.name?.isNotEmpty == true ? routine.name! : '제목 없는 루틴',
+              routine.name?.isNotEmpty == true
+                  ? routine.name!
+                  : 'Untitled Routine',
               style: titleStyle,
               overflow: TextOverflow.ellipsis,
               maxLines: 1,

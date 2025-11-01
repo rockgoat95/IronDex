@@ -78,7 +78,7 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
       if (_selectedMachineId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('머신을 선택해주세요'),
+            content: Text('Please select a machine.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -92,7 +92,7 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
       if (currentUserId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('리뷰를 작성하려면 로그인해주세요.'),
+            content: Text('Please log in to write a review.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -126,7 +126,7 @@ class _ReviewCreateScreenState extends State<ReviewCreateScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('리뷰 저장 중 오류가 발생했습니다: $error'),
+            content: Text('Failed to save the review: $error'),
             backgroundColor: Colors.red,
           ),
         );

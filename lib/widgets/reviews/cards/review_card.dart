@@ -56,11 +56,11 @@ class _ReviewCardState extends State<ReviewCard> {
       });
     } on StateError catch (error) {
       final message = error.message == 'USER_NOT_LOGGED_IN'
-          ? '로그인 후 좋아요를 사용할 수 있습니다.'
-          : '좋아요 처리 중 오류가 발생했습니다.';
+          ? 'Please log in to like reviews.'
+          : 'An error occurred while processing the like.';
       _showSnackBar(message);
     } catch (_) {
-      _showSnackBar('좋아요 처리 중 오류가 발생했습니다.');
+      _showSnackBar('An error occurred while processing the like.');
     }
   }
 
@@ -74,16 +74,16 @@ class _ReviewCardState extends State<ReviewCard> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('리뷰 삭제'),
-          content: const Text('작성한 리뷰를 삭제하시겠습니까?'),
+          title: const Text('Delete Review'),
+          content: const Text('Do you want to delete your review?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('취소'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('삭제'),
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -107,9 +107,9 @@ class _ReviewCardState extends State<ReviewCard> {
       if (!mounted) {
         return;
       }
-      _showSnackBar('리뷰가 삭제되었습니다.');
+      _showSnackBar('The review has been deleted.');
     } catch (error) {
-      _showSnackBar('리뷰 삭제 중 오류가 발생했습니다.');
+      _showSnackBar('An error occurred while deleting the review.');
     } finally {
       if (mounted) {
         setState(() {
@@ -142,7 +142,7 @@ class _ReviewCardState extends State<ReviewCard> {
 
     final rating = review.rating;
     final username = (review.user?.username ?? '').trim();
-    final displayName = username.isNotEmpty ? username : '익명 회원';
+    final displayName = username.isNotEmpty ? username : 'Anonymous User';
     final createdAt = _formatCreatedAt(review.createdAt);
 
     final currentUserId = authProvider.currentUser?.id;
@@ -328,7 +328,7 @@ class _ReviewCardState extends State<ReviewCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      comment.isNotEmpty ? comment : '내용 없음',
+                      comment.isNotEmpty ? comment : 'No content',
                       style: commentStyle,
                       textAlign: TextAlign.left,
                       maxLines: _isExpanded ? null : 3,
@@ -351,7 +351,7 @@ class _ReviewCardState extends State<ReviewCard> {
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
                           child: Text(
-                            _isExpanded ? '접기' : '더보기',
+                            _isExpanded ? 'Show less' : 'Show more',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,

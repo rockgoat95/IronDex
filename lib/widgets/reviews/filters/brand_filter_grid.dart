@@ -52,7 +52,7 @@ class _BrandFilterGridState extends State<BrandFilterGrid> {
           );
         }
         if (snapshot.hasError) {
-          return const Text('브랜드 정보를 불러올 수 없습니다');
+          return const Text('Unable to load brand information');
         }
         final brands = snapshot.data ?? <Brand>[];
 
@@ -122,7 +122,7 @@ class _BrandFilterGridState extends State<BrandFilterGrid> {
                     Icon(Icons.keyboard_arrow_up, size: 18),
                     SizedBox(width: 4),
                     Text(
-                      '접기',
+                      'Collapse',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -155,7 +155,7 @@ class _BrandFilterGridState extends State<BrandFilterGrid> {
             if (hasMoreBrands && index == 5) {
               return GestureDetector(
                 onTap: () => setState(() => _isExpanded = true),
-                child: const BrandItem(name: '더보기', isPlusButton: true),
+                child: const BrandItem(name: 'More', isPlusButton: true),
               );
             }
 

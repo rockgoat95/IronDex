@@ -93,7 +93,7 @@ class _ReviewListState extends State<ReviewList> {
     if (reviews.isEmpty) {
       return const Center(
         child: Text(
-          '리뷰가 없습니다.',
+          'No reviews yet.',
           style: TextStyle(fontSize: 16, color: Colors.grey),
         ),
       );

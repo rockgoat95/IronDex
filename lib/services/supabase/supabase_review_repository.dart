@@ -302,14 +302,14 @@ class SupabaseReviewRepository extends SupabaseService
         .limit(1);
 
     if (records.isEmpty) {
-      throw Exception('리뷰를 찾을 수 없습니다.');
+      throw Exception('Review not found.');
     }
 
     final review = Map<String, dynamic>.from(records.first);
     final authorId = review['user_id']?.toString();
 
     if (authorId == null || authorId != userId) {
-      throw Exception('리뷰를 삭제할 권한이 없습니다.');
+      throw Exception('You do not have permission to delete this review.');
     }
 
     final imageUrls = review['image_urls'] is List

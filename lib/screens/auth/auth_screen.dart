@@ -16,7 +16,11 @@ class _AuthScreenState extends State<AuthScreen> {
     if (!mounted) return;
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('로그인 중 오류가 발생했습니다. 다시 시도해주세요.')),
+        const SnackBar(
+          content: Text(
+            'An error occurred while logging in. Please try again.',
+          ),
+        ),
       );
     }
   }
@@ -67,29 +71,29 @@ class _AuthScreenState extends State<AuthScreen> {
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
               child: Text.rich(
                 TextSpan(
-                  text: '로그인 시 ',
+                  text: 'By signing in, ',
                   style: textTheme.bodySmall?.copyWith(
                     color: Colors.grey.shade600,
                   ),
                   children: [
                     TextSpan(
-                      text: '이용약관',
+                      text: 'Terms of Service',
                       style: const TextStyle(
                         decoration: TextDecoration.underline,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
                       ),
                     ),
-                    const TextSpan(text: ' 및 '),
+                    const TextSpan(text: ' and '),
                     TextSpan(
-                      text: '개인정보처리방침',
+                      text: 'Privacy Policy',
                       style: const TextStyle(
                         decoration: TextDecoration.underline,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
                       ),
                     ),
-                    const TextSpan(text: '에 동의하게 됩니다.'),
+                    const TextSpan(text: ' you agree to our policies.'),
                   ],
                 ),
                 textAlign: TextAlign.center,

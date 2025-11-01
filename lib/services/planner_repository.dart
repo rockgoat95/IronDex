@@ -51,7 +51,9 @@ class PlannerRepository {
 
     final workoutId = (response['id'] as num?)?.toInt();
     if (workoutId == null) {
-      throw PlannerRepositoryException('루틴 식별자를 불러오지 못했습니다.');
+      throw PlannerRepositoryException(
+        'Failed to load the routine identifier.',
+      );
     }
 
     final rawDate = response['date'];
@@ -133,7 +135,7 @@ class PlannerRepository {
 
       final insertedId = (insertResponse?['id'] as num?)?.toInt();
       if (insertedId == null) {
-        throw PlannerRepositoryException('루틴 생성에 실패했습니다.');
+        throw PlannerRepositoryException('Failed to create the routine.');
       }
       resolvedWorkoutId = insertedId;
     } else {
@@ -415,7 +417,7 @@ class PlannerRepository {
   String _requireUserId() {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) {
-      throw PlannerRepositoryException('로그인이 필요합니다.');
+      throw PlannerRepositoryException('Login is required.');
     }
     return userId;
   }

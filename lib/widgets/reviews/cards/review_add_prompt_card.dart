@@ -44,14 +44,14 @@ class ReviewAddPromptCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '+ 리뷰 추가하기',
+                    '+ Add a Review',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '사용 경험을 공유하고 다른 사용자에게 도움을 주세요',
+                    'Share your experience and help other users.',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

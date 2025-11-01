@@ -206,7 +206,9 @@ class _MachineListState extends State<MachineList> {
         _hasMore = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('머신 목록을 불러오는 중 오류가 발생했습니다.')),
+        const SnackBar(
+          content: Text('An error occurred while loading the machine list.'),
+        ),
       );
     }
   }
@@ -338,12 +340,16 @@ class _MachineTile extends StatelessWidget {
                 } on StateError {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('로그인 후 이용해주세요.')),
+                    const SnackBar(content: Text('Please log in to continue.')),
                   );
                 } catch (error) {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('찜 처리 중 오류가 발생했습니다.')),
+                    const SnackBar(
+                      content: Text(
+                        'An error occurred while updating favorites.',
+                      ),
+                    ),
                   );
                 }
               }

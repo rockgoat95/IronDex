@@ -180,7 +180,7 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
       onChanged: _onSearchChanged,
       onSubmitted: _onSearchSubmitted,
       decoration: InputDecoration(
-        hintText: '머신 또는 브랜드명을 검색하세요',
+        hintText: 'Search by machine or brand name',
         prefixIcon: const Icon(Icons.search),
         filled: true,
         fillColor: Colors.grey.shade100,

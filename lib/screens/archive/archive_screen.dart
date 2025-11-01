@@ -5,6 +5,8 @@ class ArchiveScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('아카이브 화면 준비 중')));
+    return const Scaffold(
+      body: Center(child: Text('Archive screen under construction')),
+    );
   }
 }

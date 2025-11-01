@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
       final repository = context.read<MachineRepository>();
       await repository.fetchMachines(limit: 10);
     } catch (_) {
-      // 초기 부팅 시 실패해도 이어서 진행
+      // Continue even if the initial boot fetch fails
     } finally {
       if (mounted) {
         Navigator.of(
