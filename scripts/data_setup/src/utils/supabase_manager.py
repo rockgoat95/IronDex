@@ -65,9 +65,9 @@ class SupabaseManager:
 
     def upload_from_url(self, *, bucket_name: str, url: str):
         """
-        Downloads a file from a URL and uploads it to Supabase storage.
-    For freemotionfitness.com URLs, uses local fallback files from
-    data/freemotion/ directory.
+            Downloads a file from a URL and uploads it to Supabase storage.
+        For freemotionfitness.com URLs, uses local fallback files from
+        data/freemotion/ directory.
         """
         try:
             # Special handling for freemotionfitness.com URLs (CAPTCHA protection)
@@ -212,7 +212,7 @@ class SupabaseManager:
 
         try:
             if schema:
-                query = self.client.postgrest.from_(table_name, schema=schema)
+                query = self.client.postgrest.schema(schema).from_(table_name)
             else:
                 query = self.client.table(table_name)
 

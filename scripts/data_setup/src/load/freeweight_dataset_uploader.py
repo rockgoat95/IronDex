@@ -29,7 +29,8 @@ IMAGES_DIR = DATA_DIR / "images"
 SOURCE_JSON = DATA_DIR / "exercise_DB_freeweights_kor.json"
 OUTPUT_JSON = DATA_DIR / "exercise_DB_freeweights_ready.json"
 IMAGE_BUCKET = "freeweight_images"
-SUPABASE_TABLE = "catalog.freeweights"
+SUPABASE_SCHEMA = "catalog"
+SUPABASE_TABLE = "freeweights"
 MAX_UPLOAD_RETRIES = 5
 RETRY_DELAY_SECONDS = 2
 
@@ -75,6 +76,23 @@ def _load_existing_output() -> dict[str, dict]:
     return {
         record.get("source_id"): record for record in records if record.get("source_id")
     }
+
+
+def _load_ready_records() -> list[dict]:
+    if not OUTPUT_JSON.exists():
+        raise FileNotFoundError(
+            f"Ready JSON file not found at {OUTPUT_JSON}. Run with processing first."
+        )
+
+    with OUTPUT_JSON.open("r", encoding="utf-8") as fp:
+        records = json.load(fp)
+
+    if not isinstance(records, list):
+        raise RuntimeError(
+            f"Expected list payload from {OUTPUT_JSON}, got {type(records).__name__}"
+        )
+
+    return records
 
 
 def _find_local_image(exercise_id: str) -> Optional[Path]:
@@ -281,14 +299,30 @@ def upsert_records(records: list[dict]) -> None:
         return
 
     manager = SupabaseManager()
-    manager.upsert_to_table(table_name=SUPABASE_TABLE, data=payload)
+    manager.upsert_to_table(
+        table_name=SUPABASE_TABLE,
+        data=payload,
+        schema=SUPABASE_SCHEMA,
+    )
 
 
-def main() -> None:
-    records = process_and_upload(save_only=False)
+def main(*, save_only: bool = False, use_ready_json: bool = False) -> list[dict] | None:
+    if use_ready_json and save_only:
+        raise ValueError("use_ready_json과 save_only는 동시에 사용할 수 없습니다.")
+
+    if use_ready_json:
+        records = _load_ready_records()
+        upsert_records(records)
+        return records
+
+    records = process_and_upload(save_only=save_only)
+    if save_only:
+        return records
+
     if records:
         upsert_records(records)
+    return records
 
 
 if __name__ == "__main__":
-    main()
+    main(use_ready_json=True)
