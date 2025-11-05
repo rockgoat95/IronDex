@@ -1,13 +1,25 @@
 class FilterConstants {
   // Body parts - anatomically fixed grouping
   static const List<String> bodyParts = [
-    'Chest',
-    'Back',
-    'Shoulder',
-    'Arms',
-    'Legs',
-    'Core',
-    'Full Body',
+    'abductors',
+    'abs',
+    'adductors',
+    'biceps',
+    'calves',
+    'cardiovascular system',
+    'delts',
+    'forearms',
+    'glutes',
+    'hamstrings',
+    'lats',
+    'levator scapulae',
+    'pectorals',
+    'quads',
+    'serratus anterior',
+    'spine',
+    'traps',
+    'triceps',
+    'upper back',
   ];
 
   // Machine types - mechanical grouping

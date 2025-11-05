@@ -21,8 +21,11 @@ class BodyPartChips extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: FilterConstants.bodyParts.map((bodyPart) {
-                final isSelected =
-                    selectedBodyParts?.contains(bodyPart) ?? false;
+        final isSelected =
+          selectedBodyParts?.contains(bodyPart) ?? false;
+        final label = bodyPart.isEmpty
+          ? bodyPart
+          : '${bodyPart[0].toUpperCase()}${bodyPart.substring(1)}';
 
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
@@ -41,7 +44,7 @@ class BodyPartChips extends StatelessWidget {
                           )
                         : null,
                     child: FilterChip(
-                      label: Text(bodyPart),
+                      label: Text(label),
                       selected: isSelected,
                       onSelected: (selected) {
                         final newSelection = List<String>.from(
