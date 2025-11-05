@@ -199,6 +199,17 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appBarTitleStyle =
+        theme.appBarTheme.titleTextStyle ?? theme.textTheme.titleLarge;
+    final resolvedAppBarTitleStyle =
+        appBarTitleStyle?.copyWith(fontSize: 20, fontWeight: FontWeight.w700) ??
+        theme.textTheme.titleLarge?.copyWith(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+        ) ??
+        const TextStyle(fontSize: 20, fontWeight: FontWeight.w700);
+
     final DateTime? displaySelectedDate =
         (_selectedDate.year == _focusedMonth.year &&
             _selectedDate.month == _focusedMonth.month)
@@ -206,7 +217,10 @@ class _PlannerScreenBodyState extends State<_PlannerScreenBody> {
         : null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Planner'), elevation: 0),
+      appBar: AppBar(
+        title: Text('Planner', style: resolvedAppBarTitleStyle),
+        elevation: 0,
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),

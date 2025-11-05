@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:irondex/models/planner_routine.dart';
 import 'package:irondex/models/routine_exercise_draft.dart';
+import 'package:irondex/utils/body_part_formatter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PlannerRepositoryException implements Exception {
@@ -91,6 +92,7 @@ class PlannerRepository {
     }
 
     final items = exercisesWithOrder.map((entry) => entry.value).toList();
+    await _hydrateMissingBodyParts(items);
 
     return PlannerRoutine(
       id: workoutId,
@@ -290,6 +292,7 @@ class PlannerRepository {
     String? brandName;
     String? brandLogoUrl;
     String? imageUrl;
+    List<String> bodyParts = const <String>[];
 
     if (memoValue is String && memoValue.isNotEmpty) {
       try {
@@ -309,6 +312,16 @@ class PlannerRepository {
           brandName = memoMap['brandName']?.toString() ?? brandName;
           brandLogoUrl = memoMap['brandLogoUrl']?.toString() ?? brandLogoUrl;
           imageUrl = memoMap['imageUrl']?.toString() ?? imageUrl;
+          final parsedBodyParts = _parseMemoBodyParts(memoMap['bodyParts']);
+          if (parsedBodyParts.isNotEmpty) {
+            bodyParts = parsedBodyParts;
+          }
+          if (_isFreeWeight(machineId)) {
+            final memoName = memoMap['machineName']?.toString();
+            if (memoName != null && memoName.isNotEmpty) {
+              machineName = formatDisplayName(memoName);
+            }
+          }
         }
       } catch (error) {
         if (kDebugMode) {
@@ -350,12 +363,17 @@ class PlannerRepository {
       sets.sort((a, b) => a.order.compareTo(b.order));
     }
 
+    final resolvedName = machineName ?? 'Machine';
+
     return RoutineExerciseDraft(
       machineId: machineId,
-      machineName: machineName ?? 'Machine',
+      machineName: _isFreeWeight(machineId)
+          ? formatDisplayName(resolvedName)
+          : resolvedName,
       brandName: brandName,
       brandLogoUrl: brandLogoUrl,
       imageUrl: imageUrl,
+      bodyParts: bodyParts,
       sets: sets,
     );
   }
@@ -367,8 +385,116 @@ class PlannerRepository {
       if (exercise.brandName != null) 'brandName': exercise.brandName,
       if (exercise.brandLogoUrl != null) 'brandLogoUrl': exercise.brandLogoUrl,
       if (exercise.imageUrl != null) 'imageUrl': exercise.imageUrl,
+      if (exercise.bodyParts.isNotEmpty) 'bodyParts': exercise.bodyParts,
     };
   }
+
+  List<String> _parseMemoBodyParts(dynamic value) {
+    if (value == null) {
+      return const <String>[];
+    }
+
+    if (value is List) {
+      return value
+          .map((element) => element?.toString() ?? '')
+          .map((text) => text.trim())
+          .where((text) => text.isNotEmpty)
+          .toList();
+    }
+
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) {
+        return const <String>[];
+      }
+      return trimmed
+          .split(',')
+          .map((segment) => segment.trim())
+          .where((segment) => segment.isNotEmpty)
+          .toList();
+    }
+
+    return const <String>[];
+  }
+
+  Future<void> _hydrateMissingBodyParts(
+    List<RoutineExerciseDraft> exercises,
+  ) async {
+    if (exercises.isEmpty) {
+      return;
+    }
+
+    final cache = <String, List<String>>{};
+
+    for (var index = 0; index < exercises.length; index++) {
+      final exercise = exercises[index];
+      if (exercise.bodyParts.isNotEmpty) {
+        continue;
+      }
+
+      final machineId = exercise.machineId;
+      if (machineId.isEmpty) {
+        continue;
+      }
+
+      final resolved = await _resolveBodyParts(machineId, cache);
+      if (resolved.isEmpty) {
+        continue;
+      }
+
+      exercises[index] = exercise.copyWith(bodyParts: resolved);
+    }
+  }
+
+  Future<List<String>> _resolveBodyParts(
+    String machineId,
+    Map<String, List<String>> cache,
+  ) async {
+    if (cache.containsKey(machineId)) {
+      return cache[machineId]!;
+    }
+
+    try {
+      final List<String> result;
+      if (_isFreeWeight(machineId)) {
+        result = await _fetchFreeWeightBodyParts(machineId.substring(3));
+      } else {
+        result = await _fetchMachineBodyParts(machineId);
+      }
+      cache[machineId] = result;
+      return result;
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[PlannerRepository] resolveBodyParts error=$error');
+      }
+      cache[machineId] = const <String>[];
+      return const <String>[];
+    }
+  }
+
+  Future<List<String>> _fetchMachineBodyParts(String machineId) async {
+    final response = await _client
+        .schema('catalog')
+        .from('machines')
+        .select('body_parts')
+        .eq('id', machineId)
+        .maybeSingle();
+
+    return _parseMemoBodyParts(response?['body_parts']);
+  }
+
+  Future<List<String>> _fetchFreeWeightBodyParts(String freeWeightId) async {
+    final response = await _client
+        .schema('catalog')
+        .from('freeweights')
+        .select('body_parts')
+        .eq('id', freeWeightId)
+        .maybeSingle();
+
+    return _parseMemoBodyParts(response?['body_parts']);
+  }
+
+  bool _isFreeWeight(String machineId) => machineId.startsWith('fw_');
 
   int _resolveReferenceId(String machineId, {required int seed}) {
     final trimmed = machineId.trim();

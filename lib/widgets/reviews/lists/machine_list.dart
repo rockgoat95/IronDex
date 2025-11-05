@@ -330,6 +330,7 @@ class _MachineTile extends StatelessWidget {
         imageUrl: machine.imageUrl ?? '',
         brandName: brandName,
         brandLogoUrl: brand?.logoUrl ?? '',
+        bodyParts: machine.bodyParts,
         score: machine.score,
         reviewCnt: machine.reviewCount,
         isFavorite: isFavorite,

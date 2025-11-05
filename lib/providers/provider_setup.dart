@@ -2,6 +2,7 @@ import 'package:irondex/providers/auth_provider.dart';
 import 'package:irondex/providers/machine_favorite_provider.dart';
 import 'package:irondex/providers/review_like_provider.dart';
 import 'package:irondex/services/repositories/brand_repository.dart';
+import 'package:irondex/services/repositories/free_weight_repository.dart';
 import 'package:irondex/services/repositories/machine_repository.dart';
 import 'package:irondex/services/repositories/review_repository.dart';
 import 'package:irondex/services/service_locator.dart';
@@ -12,6 +13,7 @@ List<SingleChildWidget> buildAppProviders(ServiceLocator services) {
   return [
     ChangeNotifierProvider(create: (_) => AuthProvider()),
     Provider<BrandRepository>.value(value: services.brandRepository),
+    Provider<FreeWeightRepository>.value(value: services.freeWeightRepository),
     Provider<MachineRepository>.value(value: services.machineRepository),
     Provider<ReviewRepository>.value(value: services.reviewRepository),
     ChangeNotifierProxyProvider2<

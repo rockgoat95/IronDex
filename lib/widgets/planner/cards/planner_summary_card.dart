@@ -68,7 +68,7 @@ class PlannerSummaryCard extends StatelessWidget {
                 _RoutineStatusBar(
                   routine: routine!,
                   onTap: onAction,
-                  backgroundColor: theme.colorScheme.secondaryContainer,
+                  backgroundColor: theme.colorScheme.surfaceVariant,
                   titleStyle: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -99,14 +99,15 @@ class _RoutineStatusBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+  final theme = Theme.of(context);
     final bool isCompleted = routine.status == PlannerRoutineStatus.completed;
     final String statusLabel = isCompleted ? 'Completed' : 'In Progress';
-    final Color statusBackground = isCompleted
-        ? Colors.green.shade100
-        : Colors.blue.shade100;
-    final Color statusForeground = isCompleted
-        ? Colors.green.shade900
-        : Colors.blue.shade800;
+  final Color statusBackground = isCompleted
+    ? Colors.grey.shade300
+    : Colors.grey.shade200;
+  final Color statusForeground = isCompleted
+    ? Colors.grey.shade900
+    : Colors.grey.shade800;
 
     final Widget content = Container(
       width: double.infinity,
@@ -137,7 +138,7 @@ class _RoutineStatusBar extends StatelessWidget {
             child: Text(
               statusLabel,
               style:
-                  statusStyle?.copyWith(
+                  (statusStyle ?? theme.textTheme.bodySmall)?.copyWith(
                     color: statusForeground,
                     fontWeight: FontWeight.w600,
                   ) ??

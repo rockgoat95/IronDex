@@ -7,15 +7,20 @@ class RoutineExerciseDraft {
     this.brandName,
     this.brandLogoUrl,
     this.imageUrl,
+    List<String>? bodyParts,
     List<RoutineExerciseSetDraft>? sets,
-  }) : sets = List<RoutineExerciseSetDraft>.from(sets ?? const []);
+  }) : _bodyParts = bodyParts == null ? null : List<String>.from(bodyParts),
+       sets = List<RoutineExerciseSetDraft>.from(sets ?? const []);
 
   final String machineId;
   final String machineName;
   final String? brandName;
   final String? brandLogoUrl;
   final String? imageUrl;
+  final List<String>? _bodyParts;
   final List<RoutineExerciseSetDraft> sets;
+
+  List<String> get bodyParts => _bodyParts ?? const <String>[];
 
   RoutineExerciseDraft copyWith({
     String? machineId,
@@ -23,6 +28,7 @@ class RoutineExerciseDraft {
     String? brandName,
     String? brandLogoUrl,
     String? imageUrl,
+    List<String>? bodyParts,
     List<RoutineExerciseSetDraft>? sets,
   }) {
     return RoutineExerciseDraft(
@@ -31,8 +37,16 @@ class RoutineExerciseDraft {
       brandName: brandName ?? this.brandName,
       brandLogoUrl: brandLogoUrl ?? this.brandLogoUrl,
       imageUrl: imageUrl ?? this.imageUrl,
+      bodyParts: bodyParts ?? _cloneBodyParts(_bodyParts),
       sets: sets ?? List<RoutineExerciseSetDraft>.from(this.sets),
     );
+  }
+
+  List<String>? _cloneBodyParts(List<String>? source) {
+    if (source == null) {
+      return null;
+    }
+    return List<String>.from(source);
   }
 }
 

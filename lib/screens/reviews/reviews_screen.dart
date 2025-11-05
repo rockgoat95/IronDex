@@ -121,16 +121,20 @@ class _ReviewsScreenBodyState extends State<_ReviewsScreenBody> {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 1,
+      toolbarHeight: 60,
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset('assets/logo/app_logo.png', height: 32),
-          const SizedBox(width: 8),
-          const Text('Iron Dex', style: TextStyle(fontWeight: FontWeight.bold)),
+          SizedBox(
+            height: 60,
+            width: 60,
+            child: Image.asset('assets/logo/app_logo.png', fit: BoxFit.contain),
+          ),
+          const SizedBox(width: 10),
+          Image.asset('assets/logo/logo_text.png', height: 24),
         ],
       ),
       actions: [
-        IconButton(icon: const Icon(Icons.search), onPressed: () {}),
         IconButton(
           icon: const Icon(Icons.notifications_none),
           onPressed: () {},

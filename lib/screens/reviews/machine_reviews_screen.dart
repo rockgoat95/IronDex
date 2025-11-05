@@ -98,6 +98,13 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
   @override
   Widget build(BuildContext context) {
     final machine = widget.machine;
+    final theme = Theme.of(context);
+    final appBarTitleStyle =
+        theme.appBarTheme.titleTextStyle ?? theme.textTheme.titleLarge;
+  final resolvedAppBarTitleStyle =
+    appBarTitleStyle?.copyWith(fontWeight: FontWeight.w700) ??
+    theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700) ??
+    const TextStyle(fontWeight: FontWeight.w700);
     final favoritesProvider = context.watch<MachineFavoriteProvider>();
     final machineId = _machineId;
     final isFavorite = favoritesProvider.isFavorite(machineId);
@@ -116,7 +123,10 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reviews'),
+        title: Text(
+          'Reviews',
+          style: resolvedAppBarTitleStyle,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.of(context).maybePop(),
@@ -133,6 +143,7 @@ class _MachineReviewsScreenState extends State<MachineReviewsScreen> {
                 imageUrl: machine.imageUrl ?? '',
                 brandName: brandName,
                 brandLogoUrl: brand?.logoUrl ?? '',
+                bodyParts: machine.bodyParts,
                 score: machine.score,
                 reviewCnt: machine.reviewCount,
                 isFavorite: isFavorite,

@@ -7,8 +7,10 @@ import 'package:irondex/models/planner_routine.dart';
 import 'package:irondex/models/routine_exercise_draft.dart';
 import 'package:irondex/screens/planner/exercise_set_editor_screen.dart';
 import 'package:irondex/services/planner_repository.dart';
+import 'package:irondex/utils/body_part_formatter.dart';
 import 'package:irondex/widgets/planner/cards/machine_summary_card.dart';
 import 'package:irondex/widgets/planner/sheets/exercise_type_picker_sheet.dart';
+import 'package:irondex/widgets/planner/sheets/free_weight_picker_sheet.dart';
 import 'package:irondex/widgets/planner/sheets/machine_picker_sheet.dart';
 
 class RoutineEditorScreen extends StatefulWidget {
@@ -251,8 +253,20 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
     }
 
     if (type == RoutineExerciseSource.freeWeight) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Free-weight exercises are coming soon.')),
+      final selectedFreeWeight = await showModalBottomSheet<Machine>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => const FreeWeightPickerSheet(),
+      );
+
+      if (!mounted || selectedFreeWeight == null) {
+        return;
+      }
+
+      _addExerciseFromMachine(
+        selectedFreeWeight,
+        stripBrand: true,
+        fallbackBrandName: 'Free Weight',
       );
       return;
     }
@@ -267,28 +281,7 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
       return;
     }
 
-    final brand = selectedMachine.brand;
-    final brandName = brand?.resolvedName(preferKorean: false);
-
-    setState(() {
-      _exercises.add(
-        RoutineExerciseDraft(
-          machineId: selectedMachine.id,
-          machineName: selectedMachine.name,
-          brandName: brandName,
-          brandLogoUrl: brand?.logoUrl,
-          imageUrl: selectedMachine.imageUrl,
-          sets: const [
-            RoutineExerciseSetDraft(
-              order: 1,
-              type: RoutineExerciseSetType.warmup,
-            ),
-          ],
-        ),
-      );
-    });
-
-    _markContentDirty();
+    _addExerciseFromMachine(selectedMachine);
   }
 
   Future<void> _handleEditExercise(int index) async {
@@ -313,6 +306,43 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
     setState(() {
       _exercises.removeAt(index);
     });
+    _markContentDirty();
+  }
+
+  void _addExerciseFromMachine(
+    Machine machine, {
+    bool stripBrand = false,
+    String? fallbackBrandName,
+  }) {
+    final isFreeWeight = stripBrand || machine.id.startsWith('fw_');
+    final brand = stripBrand ? null : machine.brand;
+    final brandName = stripBrand
+        ? fallbackBrandName
+        : brand?.resolvedName(preferKorean: false) ?? fallbackBrandName;
+    final brandLogoUrl = stripBrand ? null : brand?.logoUrl;
+    final exerciseName = isFreeWeight
+        ? formatDisplayName(machine.name)
+        : machine.name;
+
+    setState(() {
+      _exercises.add(
+        RoutineExerciseDraft(
+          machineId: machine.id,
+          machineName: exerciseName,
+          brandName: brandName,
+          brandLogoUrl: brandLogoUrl,
+          imageUrl: machine.imageUrl,
+          bodyParts: machine.bodyParts,
+          sets: const [
+            RoutineExerciseSetDraft(
+              order: 1,
+              type: RoutineExerciseSetType.warmup,
+            ),
+          ],
+        ),
+      );
+    });
+
     _markContentDirty();
   }
 
@@ -593,6 +623,13 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
     final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
     final appBarTitleStyle =
         theme.appBarTheme.titleTextStyle ?? theme.textTheme.titleLarge;
+    final resolvedAppBarTitleStyle =
+        appBarTitleStyle?.copyWith(fontSize: 18, fontWeight: FontWeight.w700) ??
+        theme.textTheme.titleLarge?.copyWith(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+        ) ??
+        const TextStyle(fontSize: 18, fontWeight: FontWeight.w700);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
@@ -612,7 +649,7 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
         appBar: AppBar(
           title: Text(
             'Routine $formattedDate',
-            style: appBarTitleStyle?.copyWith(fontSize: 18),
+            style: resolvedAppBarTitleStyle,
           ),
         ),
         body: SafeArea(
@@ -690,21 +727,27 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                                                 exercise,
                                                 theme,
                                               ),
-                                              const SizedBox(height: 18),
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                  top: 4,
+                                              const SizedBox(height: 12),
+                                              IconButton(
+                                                onPressed: () =>
+                                                    _handleRemoveExercise(
+                                                      index,
+                                                    ),
+                                                icon: const Icon(
+                                                  Icons.delete_outline,
                                                 ),
-                                                child: IconButton(
-                                                  onPressed: () =>
-                                                      _handleRemoveExercise(
-                                                        index,
-                                                      ),
-                                                  icon: const Icon(
-                                                    Icons.delete_outline,
-                                                  ),
-                                                  tooltip: 'Delete',
-                                                ),
+                                                tooltip: 'Delete',
+                                                visualDensity:
+                                                    const VisualDensity(
+                                                      horizontal: -2,
+                                                      vertical: -2,
+                                                    ),
+                                                constraints:
+                                                    const BoxConstraints.tightFor(
+                                                      width: 40,
+                                                      height: 40,
+                                                    ),
+                                                padding: EdgeInsets.zero,
                                               ),
                                             ],
                                           ),
